@@ -14,11 +14,16 @@ public class Main
         try{
             CharStream input = CharStreams.fromFileName(source);
             SysYLexerLexer sysYLexer = new SysYLexerLexer(input);
-            // sysYLexer.removeErrorListeners();
-            // sysYLexer.addErrorListener(myErrorListener);
+            sysYLexer.removeErrorListeners();
+            SimpleErrorListner myErrorListener = new SimpleErrorListner();
+            sysYLexer.addErrorListener(myErrorListener);
             List<? extends Token> myTokens = sysYLexer.getAllTokens();
-            for (Token t : myTokens) {
-                printSysYTokenInformation(t, sysYLexer.getTokenNames());
+            if (myErrorListener.hasErrorInformation()) {
+                myErrorListener.printLexerErrorInformation();
+            } else {
+                for (Token t : myTokens) {
+                    printSysYTokenInformation(t, sysYLexer.getTokenNames());
+                }
             }
         } catch(Exception e) {
             System.err.println(e.getMessage());
