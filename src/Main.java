@@ -30,6 +30,6 @@ public class Main
         }
     }
     static void printSysYTokenInformation(Token t, Vocabulary v) {
-        System.out.println(String.format("%s %s at Line %d", v.getDisplayName(t.getType()), t.getText(), t.getLine()));
+        System.out.println(String.format("%s %s at Line %d", v.getSymbolicName(t.getType()), t.getText(), t.getLine()));
     }
 }
