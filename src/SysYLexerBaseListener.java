@@ -23,18 +23,6 @@ public class SysYLexerBaseListener implements SysYLexerListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitProg(SysYLexerParser.ProgContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterExpr(SysYLexerParser.ExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitExpr(SysYLexerParser.ExprContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

@@ -16,14 +16,4 @@ public interface SysYLexerListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitProg(SysYLexerParser.ProgContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link SysYLexerParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterExpr(SysYLexerParser.ExprContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SysYLexerParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitExpr(SysYLexerParser.ExprContext ctx);
 }

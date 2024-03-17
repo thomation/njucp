@@ -1,1 +1,8 @@
-10+a20*30*
+int main() 
+{
+   // line comment
+   /* 
+     block comment
+   */
+   int i = 0x1;
+}

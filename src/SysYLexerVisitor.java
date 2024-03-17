@@ -15,10 +15,4 @@ public interface SysYLexerVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitProg(SysYLexerParser.ProgContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link SysYLexerParser#expr}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpr(SysYLexerParser.ExprContext ctx);
 }
