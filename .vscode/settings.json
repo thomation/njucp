@@ -1,6 +1,11 @@
 {
-    "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "/usr/local/lib/antlr-4.9.1-complete.jar"
-    ]
+    "java.project.referencedLibraries": {
+        "include": [
+            "lib/**/*.jar",
+            "/usr/local/lib/antlr-4.13.1-complete.jar"
+        ],
+        "exclude": [
+            "/usr/local/lib/antlr-4.9.1-complete.jar"
+        ]
+    }
 }
