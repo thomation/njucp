@@ -7,7 +7,7 @@ public class SimpleErrorListner extends BaseErrorListener {
 
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
             String msg, RecognitionException e) {
-        System.err.println("Error at Line " + line + ":"  + msg);
+        System.err.println("Error type A at Line " + line + ":"  + msg);
         errorNo++;
     }
 
