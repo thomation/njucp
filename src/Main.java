@@ -3,9 +3,9 @@ import java.util.List;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Vocabulary;
 public class Main
 {    
-    @SuppressWarnings("deprecation")
     public static void main(String[] args){
          if (args.length < 1) {
             System.err.println("input path is required");
@@ -22,14 +22,14 @@ public class Main
                 myErrorListener.printLexerErrorInformation();
             } else {
                 for (Token t : myTokens) {
-                    printSysYTokenInformation(t, sysYLexer.getTokenNames());
+                    printSysYTokenInformation(t, sysYLexer.getVocabulary());
                 }
             }
         } catch(Exception e) {
             System.err.println(e.getMessage());
         }
     }
-    static void printSysYTokenInformation(Token t, String[] names) {
-        System.out.println(String.format("%s %s at Line %d",names[t.getType()], t.getText(), t.getLine()));
+    static void printSysYTokenInformation(Token t, Vocabulary v) {
+        System.out.println(String.format("%s %s at Line %d", v.getDisplayName(t.getType()), t.getText(), t.getLine()));
     }
 }
