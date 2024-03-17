@@ -29,8 +29,6 @@ test: compile
 	$(call git_commit, "test")
 	nohup java -classpath ./classes:$(ANTLRPATH) Main ./tests/test1.sysy &
 
-gen:
-	 /home/thomation/.local/bin/antlr4 ./src/SysYLexer.g4
 clean:
 	rm -f src/*.tokens
 	rm -f src/*.interp
@@ -39,6 +37,6 @@ clean:
 	rm -rf out
 	rm -rf src/.antlr
 
-.PHONY: compile antlr test run gen clean
+.PHONY: compile antlr test run clean
 
 
