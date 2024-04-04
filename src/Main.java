@@ -2,6 +2,7 @@ import java.util.List;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
 
@@ -14,17 +15,20 @@ public class Main {
         try {
             CharStream input = CharStreams.fromFileName(source);
             SysYLexerLexer sysYLexer = new SysYLexerLexer(input);
-            sysYLexer.removeErrorListeners();
-            SimpleErrorListner myErrorListener = new SimpleErrorListner();
-            sysYLexer.addErrorListener(myErrorListener);
-            List<? extends Token> myTokens = sysYLexer.getAllTokens();
-            if (myErrorListener.hasErrorInformation()) {
-                myErrorListener.printLexerErrorInformation();
-            } else {
-                for (Token t : myTokens) {
-                    printSysYTokenInformation(t, sysYLexer.getVocabulary());
-                }
-            }
+            // sysYLexer.removeErrorListeners();
+            // SimpleErrorListner myErrorListener = new SimpleErrorListner();
+            // sysYLexer.addErrorListener(myErrorListener);
+            // List<? extends Token> myTokens = sysYLexer.getAllTokens();
+            // if (myErrorListener.hasErrorInformation()) {
+            //     myErrorListener.printLexerErrorInformation();
+            // } else {
+            //     for (Token t : myTokens) {
+            //         printSysYTokenInformation(t, sysYLexer.getVocabulary());
+            //     }
+            // }
+            CommonTokenStream tokens = new CommonTokenStream(sysYLexer);
+            SysYParser sysYParser = new SysYParser(tokens);
+            sysYParser.program();
         } catch (Exception e) {
             System.err.println("Error! " + e.getMessage());
         }
