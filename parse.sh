@@ -1,0 +1,1 @@
+antlr4-parse ./src/SysYParser.g4 ./src/SysYLexer.g4 program -gui $1

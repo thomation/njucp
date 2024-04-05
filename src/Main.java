@@ -8,9 +8,9 @@ public class Main {
         }
         String source = args[0];
         try {
-            CharStream input = CharStreams.fromFileName(source);
-            LexerTest t = new LexerTest(input);
-            t.run();
+            // CharStream input = CharStreams.fromFileName(source);
+            // LexerTest t = new LexerTest(input);
+            // t.run();
             CharStream input2 = CharStreams.fromFileName(source);
             ParserTest t2 = new ParserTest(input2);
             t2.run();

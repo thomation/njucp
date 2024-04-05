@@ -1,5 +1,6 @@
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 public class ParserTest {
     SysYParser sysYParser;
@@ -12,6 +13,8 @@ public class ParserTest {
         sysYParser.removeErrorListeners();
         ParserErrorListner myErrorListener = new ParserErrorListner();
         sysYParser.addErrorListener(myErrorListener);
-        sysYParser.program();
+        ParseTree tree = sysYParser.program().getChild(0);
+        ParserVisitor visitor = new ParserVisitor();
+        visitor.visit(tree);
     }
 }
