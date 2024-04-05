@@ -2,7 +2,7 @@ import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
-public class SimpleErrorListner extends BaseErrorListener {
+public class LexerErrorListner extends BaseErrorListener {
     int errorNo = 0;
 
     public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
