@@ -1,13 +1,14 @@
 import java.util.List;
 
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
 
 public class LexerTest {
     SysYLexerLexer sysYLexer;
 
-    public LexerTest(SysYLexerLexer sysYLexer) {
-        this.sysYLexer = sysYLexer;
+    public LexerTest(CharStream input) {
+        sysYLexer = new SysYLexerLexer(input);
     }
 
     public void run() {

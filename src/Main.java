@@ -10,8 +10,8 @@ public class Main {
         String source = args[0];
         try {
             CharStream input = CharStreams.fromFileName(source);
-            SysYLexerLexer sysYLexer = new SysYLexerLexer(input);
-            LexerTest t = new LexerTest(sysYLexer);
+            // SysYLexerLexer sysYLexer = new SysYLexerLexer(input);
+            LexerTest t = new LexerTest(input);
             t.run();
             // CommonTokenStream tokens = new CommonTokenStream(sysYLexer);
             // SysYParser sysYParser = new SysYParser(tokens);
