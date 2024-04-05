@@ -1,6 +1,5 @@
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
 
 public class Main {
     public static void main(String[] args) {
@@ -10,12 +9,11 @@ public class Main {
         String source = args[0];
         try {
             CharStream input = CharStreams.fromFileName(source);
-            // SysYLexerLexer sysYLexer = new SysYLexerLexer(input);
             LexerTest t = new LexerTest(input);
             t.run();
-            // CommonTokenStream tokens = new CommonTokenStream(sysYLexer);
-            // SysYParser sysYParser = new SysYParser(tokens);
-            // sysYParser.program();
+            CharStream input2 = CharStreams.fromFileName(source);
+            ParserTest t2 = new ParserTest(input2);
+            t2.run();
         } catch (Exception e) {
             System.err.println("Error! " + e.getMessage());
         }
