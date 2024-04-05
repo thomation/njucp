@@ -9,6 +9,9 @@ public class ParserTest {
         sysYParser = new SysYParser(tokens);
     }
     public void run() {
+        sysYParser.removeErrorListeners();
+        ParserErrorListner myErrorListener = new ParserErrorListner();
+        sysYParser.addErrorListener(myErrorListener);
         sysYParser.program();
     }
 }
