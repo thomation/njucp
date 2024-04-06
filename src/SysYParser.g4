@@ -21,8 +21,8 @@ constDef:
 constInitVal:
 	constExp
 	| L_BRACE (constInitVal (COMMA constInitVal)*)? R_BRACE;
-// 变量声明 VarDecl → BType VarDef { ',' VarDef } ';
-varDecl: btype varDef (COMMA varDef)*;
+// 变量声明 VarDecl → BType VarDef { ',' VarDef } ';'
+varDecl: btype varDef (COMMA varDef)* SEMICOLON;
 // 变量定义 VarDef → Ident { '[' ConstExp ']' } | Ident { '[' ConstExp ']' } '=' InitVal
 varDef:
 	IDENT (L_BRACKT constExp R_BRACKT)?
