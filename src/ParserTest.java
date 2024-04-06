@@ -14,7 +14,7 @@ public class ParserTest {
         ParserErrorListner myErrorListener = new ParserErrorListner();
         sysYParser.addErrorListener(myErrorListener);
         ParseTree tree = sysYParser.program().getChild(0);
-        ParserVisitor visitor = new ParserVisitor();
+        Visitor visitor = new Visitor();
         visitor.visit(tree);
     }
 }
