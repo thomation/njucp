@@ -73,9 +73,9 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         Void result = this.defaultResult();
         result = handleChild(result, ctx.btype());
         printSpace();
-        for(int i = 0; i < ctx.varDef().size(); i++) {
+        for (int i = 0; i < ctx.varDef().size(); i++) {
             result = handleChild(result, ctx.varDef(i));
-            if(i < ctx.COMMA().size()) {
+            if (i < ctx.COMMA().size()) {
                 result = handleChild(result, ctx);
                 printSpace();
             }
@@ -83,10 +83,28 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         result = handleChild(result, ctx.SEMICOLON());
         return result;
     }
+
+    @Override
+    public Void visitVarDef(SysYParser.VarDefContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.IDENT());
+        if (ctx.L_BRACKT() != null) {
+            System.err.println("Does not implement [] in visitVarDef");
+        }
+        if (ctx.ASSIGN() != null) {
+            printSpace();
+            result = handleChild(result, ctx.ASSIGN());
+            printSpace();
+            result = handleChild(result, ctx.initVal());
+        }
+        return result;
+    }
+
     Void handleChild(Void result, ParseTree child) {
         Void childResult = child.accept(this);
         return this.aggregateResult(result, childResult);
     }
+
     private void printSpace() {
         System.console().printf(" ");
     }
