@@ -60,30 +60,35 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitFuncType(SysYParser.FuncTypeContext ctx) {
         Void ret = visitChildren(ctx);
-        System.console().printf(" ");
+        printSpace();
         return ret;
     }
 
     @Override
     public Void visitBlock(SysYParser.BlockContext ctx) {
         blockDepth++;
-        System.console().printf(" ");
+        printSpace();
         Void result = this.defaultResult();
         result = this.aggregateResult(result, ctx.L_BRACE().accept(this));
-        System.out.println();
+        printNewLine();
         for (int i = 0; i < ctx.blockItem().size(); i++) {
             printTab();
             ParseTree c = ctx.blockItem(i);
             Void childResult = c.accept(this);
             result = this.aggregateResult(result, childResult);
-            System.out.println();
+            printNewLine();
         }
         result = this.aggregateResult(result, ctx.R_BRACE().accept(this));
-        System.out.println();
+        printNewLine();
         blockDepth--;
         return result;
     }
-
+    private void printSpace() {
+        System.console().printf(" ");
+    }
+    private void printNewLine() {
+        System.out.println();
+    }
     private void printTab() {
         for (int i = 0; i < blockDepth; i++)
             System.console().printf("    ");
