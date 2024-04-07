@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -5,29 +7,32 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class Visitor extends SysYParserBaseVisitor<Void> {
     int blockDepth;
-
-    @Override
-    public Void visitTerminal(TerminalNode node) {
+    HashMap<String, String> terminalFormats = new HashMap<String, String>();
+    public Visitor() {
+        terminalFormats.put("INT_funcType", "\33[36;22m%s");
+        terminalFormats.put("INT","\33[36;4m%s");
+        terminalFormats.put("VOID_funcType", "\33[36;22m%s");
+        terminalFormats.put("VOID","\33[36;4m%s");
+        terminalFormats.put("IDENT_funcDef", "\33[33;22m%s");
+        terminalFormats.put("RETURN", "\33[36;1m%s");
+    }
+    private String GetStringFormat(TerminalNode node) {
         Token t = node.getSymbol();
         String symbolName = SysYParser.VOCABULARY.getSymbolicName(t.getType());
         int index = ((RuleNode) node.getParent()).getRuleContext().getRuleIndex();
         String parentType = SysYParser.ruleNames[index];
-        String format = "%s";
-        switch (symbolName) {
-            case "INT":
-            case "VOID":
-                format = "\33[36;4m%s ";
-                if(parentType == "funcType")
-                    format = "\33[36;22m%s ";
-                break;
-            case "RETURN":
-                format = "\33[36;1m%s ";
-                break;
-            case "IDENT":
-                if(parentType == "funcDef")
-                    format = "\33[33;22m%s ";
-                break;
+        String specialKey = String.format("%s_%s", symbolName, parentType);
+        if(terminalFormats.containsKey(specialKey)) {
+            return terminalFormats.get(specialKey);
         }
+        if(terminalFormats.containsKey(symbolName)) {
+            return terminalFormats.get(symbolName);
+        }
+        return "%s";
+    }
+    @Override
+    public Void visitTerminal(TerminalNode node) {
+        String format = GetStringFormat(node);
         System.console().printf(format, node.getText());
         System.console().printf("\33[0m", node.getText()); // Reset
         return super.visitTerminal(node);
