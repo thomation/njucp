@@ -32,9 +32,11 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
     @Override
     public Void visitTerminal(TerminalNode node) {
-        String format = GetStringFormat(node);
-        System.console().printf(format, node.getText());
-        System.console().printf("\33[0m", node.getText()); // Reset
+        if(node.getSymbol().getType() != Token.EOF) {
+            String format = GetStringFormat(node);
+            System.console().printf(format, node.getText());
+            System.console().printf("\33[0m", node.getText()); // Reset
+        }
         return super.visitTerminal(node);
     }
 
