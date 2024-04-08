@@ -135,7 +135,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         for (int i = 0; i < ctx.varDef().size(); i++) {
             result = handleChild(result, ctx.varDef(i));
             if (i < ctx.COMMA().size()) {
-                result = handleChild(result, ctx);
+                result = handleChild(result, ctx.COMMA(i));
                 printSpace();
             }
         }
