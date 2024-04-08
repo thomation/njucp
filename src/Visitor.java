@@ -117,6 +117,19 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitFuncFParam(SysYParser.FuncFParamContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.btype());
+        printSpace();
+
+        int n = ctx.getChildCount();
+        for (int i = 1; i < n && this.shouldVisitNextChild(ctx, result); ++i) {
+            result = handleChild(result, ctx.getChild(i));
+        }
+        return result;
+    }
+
+    @Override
     public Void visitBlock(SysYParser.BlockContext ctx) {
         blockDepth++;
         printSpace();
