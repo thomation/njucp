@@ -8,14 +8,20 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class Visitor extends SysYParserBaseVisitor<Void> {
     int blockDepth;
     HashMap<String, String> terminalFormats = new HashMap<String, String>();
-
+    BracketFormat[] bracketFormats;
     public Visitor() {
-        terminalFormats.put("INT_funcType", "\33[36;22m%s");
-        terminalFormats.put("INT", "\33[36;4m%s");
-        terminalFormats.put("VOID_funcType", "\33[36;22m%s");
-        terminalFormats.put("VOID", "\33[36;4m%s");
+        terminalFormats.put("INT_funcType", "\33[96;22m%s");
+        terminalFormats.put("INT", "\33[96;4m%s");
+        terminalFormats.put("VOID_funcType", "\33[96;22m%s");
+        terminalFormats.put("VOID", "\33[96;4m%s");
         terminalFormats.put("IDENT_funcDef", "\33[33;22m%s");
-        terminalFormats.put("RETURN", "\33[36;1m%s");
+        terminalFormats.put("RETURN", "\33[96;22m%s");
+        // BrightRed,BrightGreen,BrightYellow,BrightBlue,BrightMagenta,BrightCyan
+        bracketFormats = new BracketFormat[] {
+            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_BRACKT", "R_BRACKT"),
+            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_BRACE", "R_BRACE"),
+            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_PAREN", "R_PAREN"),
+        };
     }
 
     private String GetStringFormat(TerminalNode node) {
@@ -29,6 +35,11 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         }
         if (terminalFormats.containsKey(symbolName)) {
             return terminalFormats.get(symbolName);
+        }
+        for(int i = 0; i < bracketFormats.length; i ++) {
+            if(bracketFormats[i].Check(symbolName)) {
+                return bracketFormats[i].getFormatString();
+            }
         }
         return "%s";
     }
@@ -102,11 +113,11 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
 
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
-        if(ctx.RETURN() == null)
+        if (ctx.RETURN() == null)
             return visitChildren(ctx);
         Void result = this.defaultResult();
         result = handleChild(result, ctx.RETURN());
-        if(ctx.exp()!= null) {
+        if (ctx.exp() != null) {
             printSpace();
             result = handleChild(result, ctx.exp());
         }
@@ -130,5 +141,37 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     private void printTab() {
         for (int i = 0; i < blockDepth; i++)
             System.console().printf("    ");
+    }
+}
+
+class BracketFormat {
+    int count;
+    String left;
+    String right;
+    String formatString;
+    int[] table;
+
+    public BracketFormat(int[] table, String left, String right) {
+        this.table = table;
+        this.left = left;
+        this.right = right;
+    }
+    public String getFormatString() {
+        return formatString;
+    }
+
+    public Boolean Check(String symbolName) {
+        if (symbolName == left) {
+            formatString = "\33[" + table[count] + ";22m%s";
+            count++;
+            return true;
+        }
+        if (symbolName == right) {
+            count--;
+            formatString = "\33[" + table[count] + ";22m%s";
+            return true;
+        }
+        formatString = null;
+        return false;
     }
 }
