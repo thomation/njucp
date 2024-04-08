@@ -21,14 +21,17 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     BracketFormat[] bracketFormats;
 
     public Visitor() {
-        // Keyword
-        terminalColors.put("INT", BrightCyan);
-        terminalColors.put("VOID", BrightCyan);
-        terminalColors.put("RETURN", BrightCyan);
-        // operator
-        terminalColors.put("ASSIGN", BrightRed);
+        String[] keywords = new String[] {
+                "CONST", "INT", "VOID", "IF", "ELSE", "WHILE", "BREAK", "CONTINUE", "RETURN" };
+        initTeminalColors(keywords, BrightCyan);
+        String[] operators = new String[] {
+                "PLUS", "MINUS", "MUL", "DIV", "MOD", "ASSIGN", "EQ", "NEQ",
+                "LT", "GT", "LE", "GE", "NOT", "AND", "OR", "COMMA", "SEMICOLON",
+        };
+        initTeminalColors(operators, BrightRed);
         terminalColors.put("funcDef", BrightYellow);
         terminalColors.put("varDef", BrightMagenta);
+        terminalColors.put("number", BrightMagenta);
         terminalFonts.put("funcDel", UnderLine);
         // BrightRed,BrightGreen,BrightYellow,BrightBlue,BrightMagenta,BrightCyan
         bracketFormats = new BracketFormat[] {
@@ -42,6 +45,11 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
                         new int[] { BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan },
                         "L_PAREN", "R_PAREN"),
         };
+    }
+
+    private void initTeminalColors(String[] symbols, int color) {
+        for (int i = 0; i < symbols.length; i++)
+            terminalColors.put(symbols[i], color);
     }
 
     private String GetStringFormat(TerminalNode node) {
