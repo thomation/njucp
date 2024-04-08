@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class Visitor extends SysYParserBaseVisitor<Void> {
+    final int Magenta = 35;
     final int BrightRed = 91;
     final int BrightGreen = 92;
     final int BrightYellow = 93;
@@ -32,7 +33,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         terminalColors.put("stmt", White);
         terminalColors.put("funcDef", BrightYellow);
         terminalColors.put("varDef", BrightMagenta);
-        terminalColors.put("number", BrightMagenta);
+        terminalColors.put("number", Magenta);
         terminalFonts.put("varDecl", UnderLine);
         // BrightRed,BrightGreen,BrightYellow,BrightBlue,BrightMagenta,BrightCyan
         bracketFormats = new BracketFormat[] {
