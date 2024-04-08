@@ -16,7 +16,7 @@ constDecl: CONST btype constDef (COMMA constDef)* SEMICOLON;
 btype: INT;
 // 常数定义 ConstDef → Ident { '[' ConstExp ']' } '=' ConstInitVal
 constDef:
-	IDENT (L_BRACE constExp R_BRACKT)? ASSIGN constInitVal;
+	IDENT (L_BRACKT constExp R_BRACKT)? ASSIGN constInitVal;
 // 常量初值 ConstInitVal → ConstExp | '{' [ ConstInitVal { ',' ConstInitVal } ] '}
 constInitVal:
 	constExp
