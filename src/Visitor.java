@@ -6,42 +6,66 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class Visitor extends SysYParserBaseVisitor<Void> {
+    final int BrightRed = 91;
+    final int BrightGreen = 92;
+    final int BrightYellow = 93;
+    final int BrightBlue = 94;
+    final int BrightMagenta = 95;
+    final int BrightCyan = 96;
+    final int White = 97;
+    final int UnderLine = 4;
+    final int Normal = 22;
     int blockDepth;
-    HashMap<String, String> terminalFormats = new HashMap<String, String>();
+    HashMap<String, Integer> terminalColors = new HashMap<String, Integer>();
+    HashMap<String, Integer> terminalFonts = new HashMap<String, Integer>();
     BracketFormat[] bracketFormats;
+
     public Visitor() {
-        terminalFormats.put("INT_funcType", "\33[96;22m%s");
-        terminalFormats.put("INT", "\33[96;4m%s");
-        terminalFormats.put("VOID_funcType", "\33[96;22m%s");
-        terminalFormats.put("VOID", "\33[96;4m%s");
-        terminalFormats.put("IDENT_funcDef", "\33[33;22m%s");
-        terminalFormats.put("RETURN", "\33[96;22m%s");
+        // Keyword
+        terminalColors.put("INT", BrightCyan);
+        terminalColors.put("VOID", BrightCyan);
+        terminalColors.put("RETURN", BrightCyan);
+        // operator
+        terminalColors.put("ASSIGN", BrightRed);
+        terminalColors.put("funcDef", BrightYellow);
+        terminalColors.put("varDef", BrightMagenta);
+        terminalFonts.put("funcDel", UnderLine);
         // BrightRed,BrightGreen,BrightYellow,BrightBlue,BrightMagenta,BrightCyan
         bracketFormats = new BracketFormat[] {
-            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_BRACKT", "R_BRACKT"),
-            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_BRACE", "R_BRACE"),
-            new BracketFormat(new int[] { 91, 92, 93, 94, 95, 96 }, "L_PAREN", "R_PAREN"),
+                new BracketFormat(
+                        new int[] { BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan },
+                        "L_BRACKT", "R_BRACKT"),
+                new BracketFormat(
+                        new int[] { BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan },
+                        "L_BRACE", "R_BRACE"),
+                new BracketFormat(
+                        new int[] { BrightRed, BrightGreen, BrightYellow, BrightBlue, BrightMagenta, BrightCyan },
+                        "L_PAREN", "R_PAREN"),
         };
     }
 
     private String GetStringFormat(TerminalNode node) {
         Token t = node.getSymbol();
         String symbolName = SysYParser.VOCABULARY.getSymbolicName(t.getType());
-        int index = ((RuleNode) node.getParent()).getRuleContext().getRuleIndex();
-        String parentType = SysYParser.ruleNames[index];
-        String specialKey = String.format("%s_%s", symbolName, parentType);
-        if (terminalFormats.containsKey(specialKey)) {
-            return terminalFormats.get(specialKey);
-        }
-        if (terminalFormats.containsKey(symbolName)) {
-            return terminalFormats.get(symbolName);
-        }
-        for(int i = 0; i < bracketFormats.length; i ++) {
-            if(bracketFormats[i].Check(symbolName)) {
+        for (int i = 0; i < bracketFormats.length; i++) {
+            if (bracketFormats[i].Check(symbolName)) {
                 return bracketFormats[i].getFormatString();
             }
         }
-        return "%s";
+        int index = ((RuleNode) node.getParent()).getRuleContext().getRuleIndex();
+        String parentType = SysYParser.ruleNames[index];
+        int font = Normal;
+        if (terminalFonts.containsKey(parentType)) {
+            font = terminalColors.get(symbolName);
+        }
+        int color = White;
+        if (terminalColors.containsKey(parentType)) {
+            color = terminalColors.get(parentType);
+        }
+        if (terminalColors.containsKey(symbolName)) {
+            color = terminalColors.get(symbolName);
+        }
+        return "\33[" + color + ";" + font + "m%s";
     }
 
     @Override
@@ -156,6 +180,7 @@ class BracketFormat {
         this.left = left;
         this.right = right;
     }
+
     public String getFormatString() {
         return formatString;
     }
