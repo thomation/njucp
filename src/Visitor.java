@@ -111,6 +111,76 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitConstDecl(SysYParser.ConstDeclContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.CONST());
+        printSpace();
+        result = handleChild(result, ctx.btype());
+        printSpace();
+        for (int i = 0; i < ctx.constDef().size(); i++) {
+            result = handleChild(result, ctx.constDef(i));
+            if (i < ctx.COMMA().size()) {
+                result = handleChild(result, ctx.COMMA(i));
+                printSpace();
+            }
+        }
+        result = handleChild(result, ctx.SEMICOLON());
+        return result;
+    }
+
+    @Override
+    public Void visitVarDecl(SysYParser.VarDeclContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.btype());
+        printSpace();
+        for (int i = 0; i < ctx.varDef().size(); i++) {
+            result = handleChild(result, ctx.varDef(i));
+            if (i < ctx.COMMA().size()) {
+                result = handleChild(result, ctx.COMMA(i));
+                printSpace();
+            }
+        }
+        result = handleChild(result, ctx.SEMICOLON());
+        return result;
+    }
+
+    @Override
+    public Void visitConstDef(SysYParser.ConstDefContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.IDENT());
+        if (ctx.L_BRACKT() != null) {
+            result = handleChild(result, ctx.L_BRACKT());
+            result = handleChild(result, ctx.constExp());
+            result = handleChild(result, ctx.R_BRACKT());
+        }
+        if (ctx.ASSIGN() != null) {
+            printSpace();
+            result = handleChild(result, ctx.ASSIGN());
+            printSpace();
+            result = handleChild(result, ctx.constInitVal());
+        }
+        return result;
+    }
+
+    @Override
+    public Void visitVarDef(SysYParser.VarDefContext ctx) {
+        Void result = this.defaultResult();
+        result = handleChild(result, ctx.IDENT());
+        if (ctx.L_BRACKT() != null) {
+            result = handleChild(result, ctx.L_BRACKT());
+            result = handleChild(result, ctx.constExp());
+            result = handleChild(result, ctx.R_BRACKT());
+        }
+        if (ctx.ASSIGN() != null) {
+            printSpace();
+            result = handleChild(result, ctx.ASSIGN());
+            printSpace();
+            result = handleChild(result, ctx.initVal());
+        }
+        return result;
+    }
+
+    @Override
     public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
         Void ret = visitChildren(ctx);
         printNewLine();
@@ -140,7 +210,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitBlock(SysYParser.BlockContext ctx) {
         blockDepth++;
-        printSpace();
+        printSpace(); // Move space to the place use block
         Void result = this.defaultResult();
         result = handleChild(result, ctx.L_BRACE());
         printNewLine();
@@ -152,40 +222,6 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         blockDepth--;
         printTab();
         result = handleChild(result, ctx.R_BRACE());
-        return result;
-    }
-
-    @Override
-    public Void visitVarDecl(SysYParser.VarDeclContext ctx) {
-        Void result = this.defaultResult();
-        result = handleChild(result, ctx.btype());
-        printSpace();
-        for (int i = 0; i < ctx.varDef().size(); i++) {
-            result = handleChild(result, ctx.varDef(i));
-            if (i < ctx.COMMA().size()) {
-                result = handleChild(result, ctx.COMMA(i));
-                printSpace();
-            }
-        }
-        result = handleChild(result, ctx.SEMICOLON());
-        return result;
-    }
-
-    @Override
-    public Void visitVarDef(SysYParser.VarDefContext ctx) {
-        Void result = this.defaultResult();
-        result = handleChild(result, ctx.IDENT());
-        if (ctx.L_BRACKT() != null) {
-            result = handleChild(result, ctx.L_BRACKT());
-            result = handleChild(result, ctx.constExp());
-            result = handleChild(result, ctx.R_BRACKT());
-        }
-        if (ctx.ASSIGN() != null) {
-            printSpace();
-            result = handleChild(result, ctx.ASSIGN());
-            printSpace();
-            result = handleChild(result, ctx.initVal());
-        }
         return result;
     }
 
