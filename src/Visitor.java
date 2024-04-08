@@ -168,15 +168,24 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
 
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
-        if (ctx.RETURN() == null)
-            return visitChildren(ctx);
         Void result = this.defaultResult();
-        result = handleChild(result, ctx.RETURN());
-        if (ctx.exp() != null) {
+        if (ctx.RETURN() != null) {
+            result = handleChild(result, ctx.RETURN());
+            if (ctx.exp() != null) {
+                printSpace();
+                result = handleChild(result, ctx.exp());
+            }
+            result = handleChild(result, ctx.SEMICOLON());
+        } else if(ctx.ASSIGN() != null) {
+            result = handleChild(result, ctx.lVal());
+            printSpace();
+            result = handleChild(result, ctx.ASSIGN());
             printSpace();
             result = handleChild(result, ctx.exp());
+            result = handleChild(result, ctx.SEMICOLON());
+        } else {
+            result = visitChildren(ctx);
         }
-        result = handleChild(result, ctx.SEMICOLON());
         return result;
     }
 
