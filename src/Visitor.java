@@ -104,6 +104,13 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitDecl(SysYParser.DeclContext ctx) {
+        Void ret = visitChildren(ctx);
+        printNewLine();
+        return ret;
+    }
+
+    @Override
     public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
         Void ret = visitChildren(ctx);
         printNewLine();
@@ -169,7 +176,9 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         Void result = this.defaultResult();
         result = handleChild(result, ctx.IDENT());
         if (ctx.L_BRACKT() != null) {
-            System.err.println("Does not implement [] in visitVarDef");
+            result = handleChild(result, ctx.L_BRACKT());
+            result = handleChild(result, ctx.constExp());
+            result = handleChild(result, ctx.R_BRACKT());
         }
         if (ctx.ASSIGN() != null) {
             printSpace();
