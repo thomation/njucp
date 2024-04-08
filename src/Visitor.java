@@ -103,6 +103,13 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
 
     @Override
+    public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
+        Void ret = visitChildren(ctx);
+        printNewLine();
+        return ret;
+    }
+
+    @Override
     public Void visitFuncType(SysYParser.FuncTypeContext ctx) {
         Void ret = visitChildren(ctx);
         printSpace();
@@ -121,9 +128,9 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
             result = handleChild(result, ctx.blockItem(i));
             printNewLine();
         }
-        result = handleChild(result, ctx.R_BRACE());
-        printNewLine();
         blockDepth--;
+        printTab();
+        result = handleChild(result, ctx.R_BRACE());
         return result;
     }
 
