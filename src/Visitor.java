@@ -29,10 +29,11 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
                 "LT", "GT", "LE", "GE", "NOT", "AND", "OR", "COMMA", "SEMICOLON",
         };
         initTeminalColors(operators, BrightRed);
+        terminalColors.put("stmt", White);
         terminalColors.put("funcDef", BrightYellow);
         terminalColors.put("varDef", BrightMagenta);
         terminalColors.put("number", BrightMagenta);
-        terminalFonts.put("funcDel", UnderLine);
+        terminalFonts.put("varDecl", UnderLine);
         // BrightRed,BrightGreen,BrightYellow,BrightBlue,BrightMagenta,BrightCyan
         bracketFormats = new BracketFormat[] {
                 new BracketFormat(
@@ -60,20 +61,35 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
                 return bracketFormats[i].getFormatString();
             }
         }
-        int index = ((RuleNode) node.getParent()).getRuleContext().getRuleIndex();
-        String parentType = SysYParser.ruleNames[index];
-        int font = Normal;
-        if (terminalFonts.containsKey(parentType)) {
-            font = terminalColors.get(symbolName);
-        }
         int color = White;
-        if (terminalColors.containsKey(parentType)) {
-            color = terminalColors.get(parentType);
-        }
+        int m = matchParent(node, terminalColors);
+        if (m > 0)
+            color = m;
+        int font = Normal;
+        m = matchParent(node, terminalFonts);
+        if (m > 0)
+            font = m;
         if (terminalColors.containsKey(symbolName)) {
             color = terminalColors.get(symbolName);
         }
         return "\33[" + color + ";" + font + "m%s";
+    }
+
+    private int matchParent(ParseTree node, HashMap<String, Integer> matchValues) {
+        ParseTree cur = node;
+        while (cur != null) {
+            if (!(cur.getParent() instanceof RuleNode))
+                break;
+            int index = ((RuleNode) cur.getParent()).getRuleContext().getRuleIndex();
+            if (index == -1)
+                break;
+            String parentType = SysYParser.ruleNames[index];
+            if (matchValues.containsKey(parentType)) {
+                return matchValues.get(parentType);
+            }
+            cur = cur.getParent();
+        }
+        return -1;
     }
 
     @Override
