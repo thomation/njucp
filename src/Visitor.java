@@ -191,7 +191,6 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
 
     @Override
     public Void visitExp(SysYParser.ExpContext ctx) {
-        Void result = this.defaultResult();
         int[] operators = new int[] {
                 SysYParser.MUL,
                 SysYParser.DIV,
@@ -202,6 +201,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         for (int i = 0; i < operators.length; i++) {
             TerminalNode node = ctx.getToken(operators[i], 0);
             if (node != null) {
+                Void result = this.defaultResult();
                 result = handleChild(result, ctx.exp(0));
                 printSpace();
                 handleChild(result, node);
@@ -210,8 +210,35 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
                 return result;
             }
         }
-        result = visitChildren(ctx);
-        return result;
+        return visitChildren(ctx);
+    }
+
+    @Override
+    public Void visitCond(SysYParser.CondContext ctx) {
+
+        int[] operators = new int[] {
+                SysYParser.LT,
+                SysYParser.GT,
+                SysYParser.LE,
+                SysYParser.GE,
+                SysYParser.EQ,
+                SysYParser.NEQ,
+                SysYParser.AND,
+                SysYParser.OR,
+        };
+        for (int i = 0; i < operators.length; i++) {
+            TerminalNode node = ctx.getToken(operators[i], 0);
+            if (node != null) {
+                Void result = this.defaultResult();
+                result = handleChild(result, ctx.cond(0));
+                printSpace();
+                handleChild(result, node);
+                printSpace();
+                result = handleChild(result, ctx.cond(1));
+                return result;
+            }
+        }
+        return visitChildren(ctx);
     }
 
     Void handleChild(Void result, ParseTree child) {
