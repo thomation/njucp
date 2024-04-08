@@ -176,7 +176,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
                 result = handleChild(result, ctx.exp());
             }
             result = handleChild(result, ctx.SEMICOLON());
-        } else if(ctx.ASSIGN() != null) {
+        } else if (ctx.ASSIGN() != null) {
             result = handleChild(result, ctx.lVal());
             printSpace();
             result = handleChild(result, ctx.ASSIGN());
@@ -186,6 +186,31 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         } else {
             result = visitChildren(ctx);
         }
+        return result;
+    }
+
+    @Override
+    public Void visitExp(SysYParser.ExpContext ctx) {
+        Void result = this.defaultResult();
+        int[] operators = new int[] {
+                SysYParser.MUL,
+                SysYParser.DIV,
+                SysYParser.MOD,
+                SysYParser.PLUS,
+                SysYParser.MINUS,
+        };
+        for (int i = 0; i < operators.length; i++) {
+            TerminalNode node = ctx.getToken(operators[i], 0);
+            if (node != null) {
+                result = handleChild(result, ctx.exp(0));
+                printSpace();
+                handleChild(result, node);
+                printSpace();
+                result = handleChild(result, ctx.exp(1));
+                return result;
+            }
+        }
+        result = visitChildren(ctx);
         return result;
     }
 
