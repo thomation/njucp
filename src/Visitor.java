@@ -210,7 +210,6 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitBlock(SysYParser.BlockContext ctx) {
         blockDepth++;
-        printSpace(); // Move space to the place use block
         Void result = this.defaultResult();
         result = handleChild(result, ctx.L_BRACE());
         printNewLine();
