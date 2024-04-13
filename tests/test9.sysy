@@ -9,4 +9,10 @@ int main() {
     }
     else
         c = 1;
+    if (1)
+        c = 2;
+    else {
+        a = 1;
+        b = 2;
+    }
 }

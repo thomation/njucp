@@ -255,7 +255,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         } else {
             result = visitChildren(ctx);
         }
-        if(needNewSpace)
+        if (needNewSpace)
             printNewLine();
         return result;
     }
@@ -318,11 +318,12 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     }
 
     private void incDepth() {
-        blockDepth ++;
+        blockDepth++;
         // System.console().printf("d%d", blockDepth);
     }
+
     private void decDepth() {
-        blockDepth --;
+        blockDepth--;
         // System.console().printf("d%d", blockDepth);
     }
 
