@@ -209,7 +209,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
 
     @Override
     public Void visitBlock(SysYParser.BlockContext ctx) {
-        blockDepth++;
+        incDepth();
         Void result = this.defaultResult();
         result = handleChild(result, ctx.L_BRACE());
         printNewLine();
@@ -217,7 +217,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
             printTab();
             result = handleChild(result, ctx.blockItem(i));
         }
-        blockDepth--;
+        decDepth();
         printTab();
         result = handleChild(result, ctx.R_BRACE());
         return result;
@@ -240,6 +240,17 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
             printSpace();
             result = handleChild(result, ctx.exp());
             result = handleChild(result, ctx.SEMICOLON());
+        } else if (ctx.ELSE() != null) {
+            result = handleChild(result, ctx.IF());
+            result = handleChild(result, ctx.L_PAREN());
+            result = handleChild(result, ctx.cond());
+            result = handleChild(result, ctx.R_PAREN());
+            printSpace();
+            result = handleChild(result, ctx.stmt(0));
+            printTab();
+            result = handleChild(result, ctx.ELSE());
+            printSpace();
+            result = handleChild(result, ctx.stmt(1));
         } else {
             result = visitChildren(ctx);
         }
@@ -302,6 +313,15 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     Void handleChild(Void result, ParseTree child) {
         Void childResult = child.accept(this);
         return this.aggregateResult(result, childResult);
+    }
+
+    private void incDepth() {
+        blockDepth ++;
+        // System.console().printf("d%d", blockDepth);
+    }
+    private void decDepth() {
+        blockDepth --;
+        // System.console().printf("d%d", blockDepth);
     }
 
     private void printSpace() {
