@@ -217,7 +217,6 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         for (int i = 0; i < ctx.blockItem().size(); i++) {
             printTab();
             result = handleChild(result, ctx.blockItem(i));
-            printNewLine();
         }
         blockDepth--;
         printTab();
@@ -245,6 +244,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         } else {
             result = visitChildren(ctx);
         }
+        printNewLine();
         return result;
     }
 
