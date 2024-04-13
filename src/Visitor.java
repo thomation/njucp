@@ -226,6 +226,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
         Void result = this.defaultResult();
+        Boolean needNewSpace = ctx.SEMICOLON() != null || ctx.block() != null;
         if (ctx.RETURN() != null) {
             result = handleChild(result, ctx.RETURN());
             if (ctx.exp() != null) {
@@ -254,7 +255,8 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
         } else {
             result = visitChildren(ctx);
         }
-        printNewLine();
+        if(needNewSpace)
+            printNewLine();
         return result;
     }
 
