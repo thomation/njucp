@@ -1,0 +1,12 @@
+int main() {
+    if (cond) {
+        c = a + b;
+        {
+        }
+    }
+    else if (cond2) {
+        return;
+    }
+    else
+        c = 1;
+}
