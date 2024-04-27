@@ -13,8 +13,8 @@ public class ParserTest {
         sysYParser.removeErrorListeners();
         ParserErrorListner myErrorListener = new ParserErrorListner();
         sysYParser.addErrorListener(myErrorListener);
-        ParseTree tree = sysYParser.program().getChild(0);
-        Visitor visitor = new Visitor();
+        ParseTree tree = sysYParser.program();
+        SemanticVisitor visitor = new SemanticVisitor();
         visitor.visit(tree);
     }
 }
