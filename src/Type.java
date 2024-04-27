@@ -1,3 +1,3 @@
-public class Type {
+public interface Type {
     
 }
