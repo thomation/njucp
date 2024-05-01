@@ -1,10 +1,5 @@
-import java.util.Map;
-
 public interface Scope {
-    String getName();
-    void setName(String name);
-    Map<String, Symbol> getSymbols();
+    void put(String name, Type type);
     Scope getEncloseingScope();
-    void define(Symbol symbol);
-    Symbol resolve(String name);
+    Type find(String name);
 }

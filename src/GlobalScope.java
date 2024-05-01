@@ -1,8 +1,8 @@
 public class GlobalScope extends BaseScope{
     public GlobalScope(Scope enclosingScope) {
-        super("GlobalScope", enclosingScope);
-        this.define(new BaseTypeSymbol("int"));
-        this.define(new BaseTypeSymbol("void"));
+        super(enclosingScope);
+        this.put("int", new IntType());
+        this.put("void", new VoidType());
     }
     
 }

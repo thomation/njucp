@@ -1,44 +1,26 @@
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class BaseScope implements Scope {
-    String name;
-    final Map<String, Symbol> symbols = new LinkedHashMap<>();
     final Scope enclosingScope;
-
-    public BaseScope(String name, Scope enclosingScope) {
-        this.name = name;
+    LinkedHashMap<String, Type> types = new LinkedHashMap<String, Type>();
+    public BaseScope(Scope enclosingScope) {
         this.enclosingScope = enclosingScope;
-        System.out.println("Define Scope: " + name);
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Map<String, Symbol> getSymbols() {
-        return this.symbols;
+    public void put(String name, Type type) {
+        types.put(name, type);
     }
 
     public Scope getEncloseingScope() {
         return this.enclosingScope;
     }
-
-    public void define(Symbol symbol) {
-        this.symbols.put(symbol.getName(), symbol);
-    }
-
-    public Symbol resolve(String name) {
-        Symbol symbol = this.symbols.get(name);
-        if(symbol != null) {
-            return symbol;
+    public Type find(String name) {
+        Type type = this.types.get(name);
+        if(type != null) {
+            return type;
         }
         if(this.enclosingScope != null)
-            return this.enclosingScope.resolve(name);
+            return this.enclosingScope.find(name);
         return null;
     }
 }

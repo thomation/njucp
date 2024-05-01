@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 
 public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     Scope curScope;
@@ -12,7 +13,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
 
 	@Override public Void visitVarDecl(SysYParser.VarDeclContext ctx) {
         var typeName = ctx.btype().getText();
-        if(curScope.resolve(typeName) == null) {
+        if(curScope.find(typeName) == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_TYPE, ctx.btype().INT().getSymbol().getLine(), typeName);
         }
         return visitChildren(ctx);
@@ -21,17 +22,23 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitVarDef(SysYParser.VarDefContext ctx) {
         String varName = ctx.IDENT().getText();
-        // TODO: define type
-        curScope.define(new BaseSymbol(varName, null));
+        curScope.put(varName, new IntType());
         return visitChildren(ctx);
     }
 
     @Override
     public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
         String funcName = ctx.IDENT().getText();
-        if (curScope.resolve(funcName) != null) {
+        if (curScope.find(funcName) != null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_FUNC, ctx.IDENT().getSymbol().getLine(), funcName);
+            return null;
         }
-        return visitChildren(ctx);
+        String typeString = ctx.funcType().getText();
+        Type retType = curScope.find(typeString);
+        ArrayList<Type> paramsType = new ArrayList<Type>();
+        FunctionType funcType = new FunctionType(retType, paramsType);
+        curScope.put(funcName, funcType);
+        visit(ctx.block());
+        return null;
     }
 }
