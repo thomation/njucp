@@ -13,7 +13,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
 	@Override public Void visitVarDecl(SysYParser.VarDeclContext ctx) {
         var typeName = ctx.btype().getText();
         if(curScope.resolve(typeName) == null) {
-            System.err.println("no type:" + typeName);
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_TYPE, ctx.btype().INT().getSymbol().getLine(), typeName);
         }
         return visitChildren(ctx);
     }
@@ -30,7 +30,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
         String funcName = ctx.IDENT().getText();
         if (curScope.resolve(funcName) != null) {
-            System.err.println("error redefine " + funcName);
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_FUNC, ctx.IDENT().getSymbol().getLine(), funcName);
         }
         return visitChildren(ctx);
     }

@@ -16,5 +16,6 @@ public class ParserTest {
         ParseTree tree = sysYParser.program();
         SemanticVisitor visitor = new SemanticVisitor();
         visitor.visit(tree);
+        OutputHelper.getInstance().printResult();
     }
 }
