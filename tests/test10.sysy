@@ -1,4 +1,3 @@
-int main;
 int main() {
     int c = 4, d = 5;
     return 0;

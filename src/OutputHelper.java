@@ -4,6 +4,8 @@ import java.util.List;
 public class OutputHelper {
     static OutputHelper instance;
     List<SemanticError> errorList = new ArrayList<SemanticError>();
+    List<SemanticNode> nodes = new ArrayList<SemanticNode>();
+        
         
     public static OutputHelper getInstance() {
         if (instance == null)
@@ -15,8 +17,8 @@ public class OutputHelper {
         errorList.add(new SemanticError(errorType, line, errorMessage));
     }
 
-    public void addSemantic() {
-
+    public void addSemantic(int depth, String message) {
+        nodes.add(new SemanticNode(depth, message));
     }
 
     public void printResult() {
@@ -25,7 +27,9 @@ public class OutputHelper {
                 System.err.println(semanticError.toString());
             }
         } else {
-
+            for(SemanticNode semanticNode : nodes) {
+                System.out.println(semanticNode.toString());
+            }
         }
     }
 
