@@ -53,6 +53,9 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     public Void visitVarDef(SysYParser.VarDefContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "VarDef");
         String varName = ctx.IDENT().getText();
+        if(curScope.find(varName) != null) {
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(), varName);
+        }
         OutputHelper.getInstance().addSemantic(depth++, varName + " IDENT");
         depth--;
         curScope.put(varName, new IntType());
