@@ -59,7 +59,14 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
         }
         OutputHelper.getInstance().addSemantic(depth++, varName + " IDENT");
         depth--;
-        curScope.put(varName, new IntType());
+        if (ctx.constExp() == null) {
+            curScope.put(varName, new IntType());
+        } else { // array
+            // TODO: d = const exp
+            int d = 1;
+            // TODO: support multiple array
+            curScope.put(varName, new ArrayType(new IntType(), d));
+        }
         if (ctx.ASSIGN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.ASSIGN().getText() + " ASSIGN");
             depth--;
@@ -76,6 +83,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
         depth--;
         return ret;
     }
+
 
     @Override
     public Void visitExp(SysYParser.ExpContext ctx) {
@@ -110,7 +118,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
         if (ctx.RETURN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.RETURN().getText() + " RETURN");
             depth--;
-            if(ctx.exp() != null)
+            if (ctx.exp() != null)
                 visit(ctx.exp());
             visit(ctx.SEMICOLON());
             return null;
