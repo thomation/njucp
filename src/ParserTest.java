@@ -18,6 +18,8 @@ public class ParserTest {
         v1.visit(tree);
         SemanticVisitor v2 = new SemanticVisitor();
         v2.visit(tree);
+        ParseVisitor v3 = new ParseVisitor();
+        v3.visit(tree);
         OutputHelper.getInstance().printResult();
     }
 }
