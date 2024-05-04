@@ -4,4 +4,5 @@ public enum SemanticErrorType {
     UNDEF_FUNC,
     REDEF_VAR,
     REDEF_FUNC,
+    MISMATCH_ASSIGN,
 }

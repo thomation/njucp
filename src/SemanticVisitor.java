@@ -1,119 +1,124 @@
 import java.util.ArrayList;
 
-public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
+public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     Scope curScope;
     GlobalScope globalScope;
     int depth = 0;
 
     @Override
-    public Void visitProgram(SysYParser.ProgramContext ctx) {
+    public Type visitProgram(SysYParser.ProgramContext ctx) {
         globalScope = new GlobalScope(null);
         curScope = globalScope;
         OutputHelper.getInstance().addSemantic(depth, "program");
         depth++;
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
     @Override
-    public Void visitCompUnit(SysYParser.CompUnitContext ctx) {
+    public Type visitCompUnit(SysYParser.CompUnitContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "compUnit");
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
     @Override
-    public Void visitDecl(SysYParser.DeclContext ctx) {
+    public Type visitDecl(SysYParser.DeclContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Decl");
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
     @Override
-    public Void visitVarDecl(SysYParser.VarDeclContext ctx) {
+    public Type visitVarDecl(SysYParser.VarDeclContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "VarDecl");
         var typeName = ctx.btype().getText();
         OutputHelper.getInstance().addSemantic(depth++, "Btype");
-        if (curScope.find(typeName) == null) {
+        Type declType = curScope.find(typeName);
+        if (declType == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_TYPE,
                     ctx.btype().INT().getSymbol().getLine(), typeName);
         }
         OutputHelper.getInstance().addSemantic(depth++, typeName + " INT");
         depth--;
         depth--;
-        Void ret = visitChildren(ctx);
+        visitChildren(ctx);
         depth--;
-        return ret;
+        return declType;
     }
 
     @Override
-    public Void visitVarDef(SysYParser.VarDefContext ctx) {
+    public Type visitVarDef(SysYParser.VarDefContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "VarDef");
         String varName = ctx.IDENT().getText();
-        if (curScope.get(varName) != null) {
+        Type defType = curScope.get(varName);
+        if (defType != null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(),
                     varName);
         }
         OutputHelper.getInstance().addSemantic(depth++, varName + " IDENT");
         depth--;
         if (ctx.constExp() == null) {
-            curScope.put(varName, new IntType());
+            defType = new IntType();
+            curScope.put(varName, defType);
         } else { // array
             // TODO: d = const exp
             int d = 1;
             // TODO: support multiple array
-            curScope.put(varName, new ArrayType(new IntType(), d));
+            defType = new ArrayType(new IntType(), d);
+            curScope.put(varName, defType);
         }
         if (ctx.ASSIGN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.ASSIGN().getText() + " ASSIGN");
             depth--;
         }
-        Void ret = visitChildren(ctx);
+        visitChildren(ctx);
         depth--;
-        return ret;
+        return defType;
     }
 
     @Override
-    public Void visitInitVal(SysYParser.InitValContext ctx) {
+    public Type visitInitVal(SysYParser.InitValContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "InitVal");
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
-
     @Override
-    public Void visitExp(SysYParser.ExpContext ctx) {
+    public Type visitExp(SysYParser.ExpContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Exp");
+        Type expType = null;
         if (ctx.IDENT() != null) {
             String fName = ctx.IDENT().getText();
-            if (curScope.find(fName) == null) {
+            expType = curScope.find(fName);
+            if (expType == null) {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_FUNC,
                         ctx.IDENT().getSymbol().getLine(), fName);
             }
         }
-        Void ret = visitChildren(ctx);
+        visitChildren(ctx);
         depth--;
-        return ret;
+        return expType;
     }
 
     @Override
-    public Void visitNumber(SysYParser.NumberContext ctx) {
+    public Type visitNumber(SysYParser.NumberContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Number");
         if (ctx.INTEGER_CONST() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.INTEGER_CONST().getText() + " INTEGER_CONST");
             depth--;
         }
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
     @Override
-    public Void visitStmt(SysYParser.StmtContext ctx) {
+    public Type visitStmt(SysYParser.StmtContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Stmt");
         if (ctx.RETURN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.RETURN().getText() + " RETURN");
@@ -124,36 +129,42 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
             return null;
         }
         if (ctx.ASSIGN() != null) {
-            visit(ctx.lVal());
+            Type lType = visit(ctx.lVal());
             OutputHelper.getInstance().addSemantic(depth++, ctx.ASSIGN().getText() + " ASSIGN");
             depth--;
             visit(ctx.ASSIGN());
-            visit(ctx.exp());
+            Type rType = visit(ctx.exp());
+            if (lType != null && rType != null) {
+                if(lType.getClass() != rType.getClass()) {
+                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_ASSIGN, ctx.ASSIGN().getSymbol().getLine(), String.format("%s != %s", lType.getClass(), rType.getClass()));
+                }
+            }
             visit(ctx.SEMICOLON());
             return null;
         }
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
 
     @Override
-    public Void visitLVal(SysYParser.LValContext ctx) {
+    public Type visitLVal(SysYParser.LValContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "LVal");
         String lName = ctx.IDENT().getText();
         OutputHelper.getInstance().addSemantic(depth++, lName + " IDENT");
         depth--;
-        if (curScope.find(lName) == null) {
+        Type valType = curScope.find(lName);
+        if (valType == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
                     ctx.IDENT().getSymbol().getLine(), lName);
         }
-        Void ret = visitChildren(ctx);
+        visitChildren(ctx);
         depth--;
-        return ret;
+        return valType;
     }
 
     @Override
-    public Void visitFuncDef(SysYParser.FuncDefContext ctx) {
+    public Type visitFuncDef(SysYParser.FuncDefContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "FuncDef");
         String funcName = ctx.IDENT().getText();
         if (curScope.find(funcName) != null) {
@@ -180,11 +191,11 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
         curScope.put(funcName, funcType);
         visit(ctx.block());
         depth--;
-        return null;
+        return funcType;
     }
 
     @Override
-    public Void visitBlock(SysYParser.BlockContext ctx) {
+    public Type visitBlock(SysYParser.BlockContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Block");
         Scope localScope = new LocalScope(curScope);
         curScope = localScope;
@@ -196,9 +207,9 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     }
 
     @Override
-    public Void visitBlockItem(SysYParser.BlockItemContext ctx) {
+    public Type visitBlockItem(SysYParser.BlockItemContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "BlockItem");
-        Void ret = visitChildren(ctx);
+        Type ret = visitChildren(ctx);
         depth--;
         return ret;
     }
