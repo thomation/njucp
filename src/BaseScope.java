@@ -15,12 +15,15 @@ public class BaseScope implements Scope {
         return this.enclosingScope;
     }
     public Type find(String name) {
-        Type type = this.types.get(name);
+        Type type = get(name);
         if(type != null) {
             return type;
         }
         if(this.enclosingScope != null)
             return this.enclosingScope.find(name);
         return null;
+    }
+    public Type get(String name) {
+        return this.types.get(name);
     }
 }

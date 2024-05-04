@@ -53,7 +53,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     public Void visitVarDef(SysYParser.VarDefContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "VarDef");
         String varName = ctx.IDENT().getText();
-        if (curScope.find(varName) != null) {
+        if (curScope.get(varName) != null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(),
                     varName);
         }
@@ -80,13 +80,6 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitExp(SysYParser.ExpContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Exp");
-        if (ctx.lVal() != null) {
-            String lName = ctx.lVal().IDENT().getText();
-            if (curScope.find(lName) == null) {
-                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
-                        ctx.lVal().IDENT().getSymbol().getLine(), lName);
-            }
-        }
         if (ctx.IDENT() != null) {
             String fName = ctx.IDENT().getText();
             if (curScope.find(fName) == null) {
@@ -114,16 +107,37 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Stmt");
-        if (ctx.lVal() != null) {
-            String lName = ctx.lVal().IDENT().getText();
-            if (curScope.find(lName) == null) {
-                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
-                        ctx.lVal().IDENT().getSymbol().getLine(), lName);
-            }
-        }
         if (ctx.RETURN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.RETURN().getText() + " RETURN");
             depth--;
+            if(ctx.exp() != null)
+                visit(ctx.exp());
+            visit(ctx.SEMICOLON());
+            return null;
+        }
+        if (ctx.ASSIGN() != null) {
+            visit(ctx.lVal());
+            OutputHelper.getInstance().addSemantic(depth++, ctx.ASSIGN().getText() + " ASSIGN");
+            depth--;
+            visit(ctx.ASSIGN());
+            visit(ctx.exp());
+            visit(ctx.SEMICOLON());
+            return null;
+        }
+        Void ret = visitChildren(ctx);
+        depth--;
+        return ret;
+    }
+
+    @Override
+    public Void visitLVal(SysYParser.LValContext ctx) {
+        OutputHelper.getInstance().addSemantic(depth++, "LVal");
+        String lName = ctx.IDENT().getText();
+        OutputHelper.getInstance().addSemantic(depth++, lName + " IDENT");
+        depth--;
+        if (curScope.find(lName) == null) {
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
+                    ctx.IDENT().getSymbol().getLine(), lName);
         }
         Void ret = visitChildren(ctx);
         depth--;
