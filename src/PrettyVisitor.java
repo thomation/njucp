@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-public class Visitor extends SysYParserBaseVisitor<Void> {
+public class PrettyVisitor extends SysYParserBaseVisitor<Void> {
     final int Magenta = 35;
     final int BrightRed = 91;
     final int BrightGreen = 92;
@@ -21,7 +21,7 @@ public class Visitor extends SysYParserBaseVisitor<Void> {
     HashMap<String, Integer> terminalFonts = new HashMap<String, Integer>();
     BracketFormat[] bracketFormats;
 
-    public Visitor() {
+    public PrettyVisitor() {
         String[] keywords = new String[] {
                 "CONST", "INT", "VOID", "IF", "ELSE", "WHILE", "BREAK", "CONTINUE", "RETURN" };
         initTeminalColors(keywords, BrightCyan);
