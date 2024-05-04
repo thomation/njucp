@@ -53,8 +53,9 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     public Void visitVarDef(SysYParser.VarDefContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "VarDef");
         String varName = ctx.IDENT().getText();
-        if(curScope.find(varName) != null) {
-            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(), varName);
+        if (curScope.find(varName) != null) {
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(),
+                    varName);
         }
         OutputHelper.getInstance().addSemantic(depth++, varName + " IDENT");
         depth--;
@@ -79,6 +80,20 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitExp(SysYParser.ExpContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Exp");
+        if (ctx.lVal() != null) {
+            String lName = ctx.lVal().IDENT().getText();
+            if (curScope.find(lName) == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
+                        ctx.lVal().IDENT().getSymbol().getLine(), lName);
+            }
+        }
+        if (ctx.IDENT() != null) {
+            String fName = ctx.IDENT().getText();
+            if (curScope.find(fName) == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_FUNC,
+                        ctx.IDENT().getSymbol().getLine(), fName);
+            }
+        }
         Void ret = visitChildren(ctx);
         depth--;
         return ret;
@@ -99,18 +114,19 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Stmt");
-        if(ctx.lVal() != null) {
+        if (ctx.lVal() != null) {
             String lName = ctx.lVal().IDENT().getText();
-            if(curScope.find(lName) == null) {
-                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR, ctx.lVal().IDENT().getSymbol().getLine(), lName);
+            if (curScope.find(lName) == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
+                        ctx.lVal().IDENT().getSymbol().getLine(), lName);
             }
         }
-        if(ctx.RETURN() != null) {
+        if (ctx.RETURN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.RETURN().getText() + " RETURN");
-            depth --;
+            depth--;
         }
         Void ret = visitChildren(ctx);
-        depth --;
+        depth--;
         return ret;
     }
 
