@@ -99,6 +99,12 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Void> {
     @Override
     public Void visitStmt(SysYParser.StmtContext ctx) {
         OutputHelper.getInstance().addSemantic(depth++, "Stmt");
+        if(ctx.lVal() != null) {
+            String lName = ctx.lVal().IDENT().getText();
+            if(curScope.find(lName) == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR, ctx.lVal().IDENT().getSymbol().getLine(), lName);
+            }
+        }
         if(ctx.RETURN() != null) {
             OutputHelper.getInstance().addSemantic(depth++, ctx.RETURN().getText() + " RETURN");
             depth --;
