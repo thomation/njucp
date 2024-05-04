@@ -7,5 +7,8 @@ public class FunctionType implements Type {
         this.retType = retType;
         this.paramsType = paramsType;
     }
+    ArrayList<Type> getParamsType() {
+        return paramsType;
+    }
 
 }

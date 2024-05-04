@@ -52,20 +52,46 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
 
     @Override
     public Type visitExp(SysYParser.ExpContext ctx) {
-        Type expType = null;
-        if (ctx.IDENT() != null) {
+        if (ctx.IDENT() != null) { // function
             String fName = ctx.IDENT().getText();
-            expType = curScope.find(fName);
-            if (expType == null) {
+            Type type = curScope.find(fName);
+            if (type == null) {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_FUNC,
                         ctx.IDENT().getSymbol().getLine(), fName);
+            } else if (!(type instanceof FunctionType)) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.NOT_FUNC,
+                        ctx.IDENT().getSymbol().getLine(), fName);
+            } else {
+                FunctionType functionType = (FunctionType) type;
+                boolean match = true;
+                if (ctx.funcRParams() == null && functionType.getParamsType() == null) {
+                    match = true;
+                }
+                else if (ctx.funcRParams() != null && functionType.getParamsType() == null ||
+                        ctx.funcRParams() == null && functionType.getParamsType() != null) {
+                    match = false;
+                } else if(ctx.funcRParams().param().size() != functionType.getParamsType().size()) {
+                    match = false;
+                } else {
+                    for(int i = 0; i < ctx.funcRParams().param().size(); i ++) {
+                        Type pt = visit(ctx.funcRParams().param(i));
+                        Type at = functionType.getParamsType().get(i);
+                        if(pt.getClass() != at.getClass()) {
+                            match = false;
+                        }
+                    }
+                }
+                if (!match) {
+                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.FUNC_PARAM,
+                            ctx.IDENT().getSymbol().getLine(), fName);
+                }
             }
+
         }
         if (ctx.PLUS() != null) {
             HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
         }
-        expType = visitChildren(ctx);
-        return expType;
+        return visitChildren(ctx);
     }
 
     Type HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {

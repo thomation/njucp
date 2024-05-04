@@ -6,4 +6,8 @@ public enum SemanticErrorType {
     REDEF_FUNC,
     MISMATCH_ASSIGN,
     MISMATCH_OPERANDS,
+    MISMATCH_RETURN,
+    FUNC_PARAM,
+    NOT_ARRAY,
+    NOT_FUNC,
 }
