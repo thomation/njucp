@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
+
+import org.antlr.v4.runtime.Token;
 
 public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     Scope curScope;
@@ -8,8 +11,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     public Type visitProgram(SysYParser.ProgramContext ctx) {
         globalScope = new GlobalScope(null);
         curScope = globalScope;
-        Type ret = visitChildren(ctx);
-        return ret;
+        return visitChildren(ctx);
     }
 
     @Override
@@ -59,8 +61,29 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                         ctx.IDENT().getSymbol().getLine(), fName);
             }
         }
-        visitChildren(ctx);
+        if (ctx.PLUS() != null) {
+            HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
+        }
+        expType = visitChildren(ctx);
         return expType;
+    }
+
+    Type HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
+        Type lType = visit(ctx.exp(0));
+        Type rType = visit(ctx.exp(1));
+        if (lType.getClass() != rType.getClass()) {
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_OPERANDS, symbol.getLine(),
+                    ctx.exp(0).getText() + " = " + ctx.exp(1).getText());
+            return null;
+        }
+        switch (symbol.getText()) {
+            // TODO: compute value
+            // case "+":
+            // return lType + rType;
+            default:
+                break;
+        }
+        return lType;
     }
 
     @Override
