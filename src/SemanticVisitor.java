@@ -1,6 +1,3 @@
-import java.util.ArrayList;
-import java.util.function.BiConsumer;
-
 import org.antlr.v4.runtime.Token;
 
 public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
@@ -113,16 +110,33 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
 
     @Override
     public Type visitNumber(SysYParser.NumberContext ctx) {
-        // TODO: compute value
-        Type ret = visitChildren(ctx);
-        return ret;
+        return new IntType();
+    }
+
+    private FunctionType findEncloseFuncType() {
+        Scope temp = curScope;
+        while(temp != globalScope) {
+            if(temp instanceof FunctionType) {
+                return (FunctionType)temp;
+            }
+            temp = temp.getEncloseingScope();
+        }
+        return null;
     }
 
     @Override
     public Type visitStmt(SysYParser.StmtContext ctx) {
         if (ctx.RETURN() != null) {
-            if (ctx.exp() != null)
-                visit(ctx.exp());
+            if (ctx.exp() != null) {
+                Type retType = visit(ctx.exp());
+                FunctionType funcType = findEncloseFuncType();
+                if (funcType == null || retType == null || retType.getClass() != funcType.getRetType().getClass()) {
+                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
+                            ctx.RETURN().getSymbol().getLine(),
+                            funcType.getRetType() + " != " + retType);
+                }
+                return retType;
+            }
             visit(ctx.SEMICOLON());
             return null;
         }
@@ -177,18 +191,21 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             return null;
         }
         String typeString = ctx.funcType().getText();
+        FunctionType funcType = new FunctionType(funcName, curScope);
+        curScope.put(funcName, funcType);
         Type retType = curScope.find(typeString);
-        ArrayList<Type> paramsType = new ArrayList<Type>();
+        funcType.setRetType(retType);
         if (ctx.funcFParams() != null) {
             for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
-                // TODO: put id int scope of function
                 String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
-                paramsType.add(new IntType());
+                Type paramType = visit(ctx.funcFParams().funcFParam(i));
+                funcType.addParamType(id, paramType);
             }
         }
-        FunctionType funcType = new FunctionType(retType, paramsType);
-        curScope.put(funcName, funcType);
-        visit(ctx.block());
+        // Visit block items to forbid create new scope in block.
+        curScope = funcType;
+        for (int i = 0; i < ctx.block().blockItem().size(); i++)
+            visit(ctx.block().blockItem(i));
         return funcType;
     }
 

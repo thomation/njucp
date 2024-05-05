@@ -1,9 +1,11 @@
 import java.util.LinkedHashMap;
 
 public class BaseScope implements Scope {
+    final String scopeName;
     final Scope enclosingScope;
     LinkedHashMap<String, Type> types = new LinkedHashMap<String, Type>();
-    public BaseScope(Scope enclosingScope) {
+    public BaseScope(String scopeName, Scope enclosingScope) {
+        this.scopeName = scopeName;
         this.enclosingScope = enclosingScope;
     }
 
