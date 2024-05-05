@@ -128,6 +128,12 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         }
         if (ctx.ASSIGN() != null) {
             Type lType = visit(ctx.lVal());
+            if (lType instanceof FunctionType) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.LEFT_VAR,
+                        ctx.ASSIGN().getSymbol().getLine(),
+                        String.format("%s", lType.getClass()));
+
+            }
             visit(ctx.ASSIGN());
             Type rType = visit(ctx.exp());
             if (lType != null && rType != null) {

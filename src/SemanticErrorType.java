@@ -10,4 +10,5 @@ public enum SemanticErrorType {
     FUNC_PARAM,
     NOT_ARRAY,
     NOT_FUNC,
+    LEFT_VAR,
 }
