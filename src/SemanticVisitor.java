@@ -66,17 +66,16 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                 boolean match = true;
                 if (ctx.funcRParams() == null && functionType.getParamsType() == null) {
                     match = true;
-                }
-                else if (ctx.funcRParams() != null && functionType.getParamsType() == null ||
+                } else if (ctx.funcRParams() != null && functionType.getParamsType() == null ||
                         ctx.funcRParams() == null && functionType.getParamsType() != null) {
                     match = false;
-                } else if(ctx.funcRParams().param().size() != functionType.getParamsType().size()) {
+                } else if (ctx.funcRParams().param().size() != functionType.getParamsType().size()) {
                     match = false;
                 } else {
-                    for(int i = 0; i < ctx.funcRParams().param().size(); i ++) {
+                    for (int i = 0; i < ctx.funcRParams().param().size(); i++) {
                         Type pt = visit(ctx.funcRParams().param(i));
                         Type at = functionType.getParamsType().get(i);
-                        if(pt.getClass() != at.getClass()) {
+                        if (pt.getClass() != at.getClass()) {
                             match = false;
                         }
                     }
@@ -152,6 +151,12 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         if (valType == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
                     ctx.IDENT().getSymbol().getLine(), lName);
+        }
+        if (ctx.L_BRACKT() != null && ctx.L_BRACKT().size() > 0) {
+            if (!(valType instanceof ArrayType)) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.NOT_ARRAY,
+                        ctx.IDENT().getSymbol().getLine(), lName);
+            }
         }
         visitChildren(ctx);
         return valType;
