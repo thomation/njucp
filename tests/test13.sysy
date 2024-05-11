@@ -1,0 +1,11 @@
+int array()
+{
+    int arr[3] = {0, 1, 2};
+    int a1 = 0, a2 = 1;
+    return arr[a1] + arr[a2] + arr[2];
+}
+
+int main()
+{
+    return array();;
+}
