@@ -85,6 +85,8 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.FUNC_PARAM,
                             ctx.IDENT().getSymbol().getLine(), fName);
                 }
+                visitChildren(ctx);
+                return functionType.getRetType();
             }
 
         }
