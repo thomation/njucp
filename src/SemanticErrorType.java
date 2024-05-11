@@ -11,4 +11,5 @@ public enum SemanticErrorType {
     NOT_ARRAY,
     NOT_FUNC,
     LEFT_VAR,
+    ARRAY_SIZE_CONST,
 }

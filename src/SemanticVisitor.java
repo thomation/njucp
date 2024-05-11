@@ -35,8 +35,12 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             defType = new IntType();
             curScope.put(varName, defType);
         } else { // array
-            // TODO: d = const exp
-            int d = 1;
+            if (ctx.constExp().exp().number() == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
+                        ctx.L_BRACKT().getSymbol().getLine(), ctx.constExp().exp().getText());
+                return null;
+            }
+            int d = Integer.parseInt(ctx.constExp().exp().number().getText());
             // TODO: support multiple array
             defType = new ArrayType(new IntType(), d);
             curScope.put(varName, defType);
@@ -115,9 +119,9 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
 
     private FunctionType findEncloseFuncType() {
         Scope temp = curScope;
-        while(temp != globalScope) {
-            if(temp instanceof FunctionType) {
-                return (FunctionType)temp;
+        while (temp != globalScope) {
+            if (temp instanceof FunctionType) {
+                return (FunctionType) temp;
             }
             temp = temp.getEncloseingScope();
         }
@@ -176,7 +180,18 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             if (!(valType instanceof ArrayType)) {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.NOT_ARRAY,
                         ctx.IDENT().getSymbol().getLine(), lName);
+                return null;
             }
+            Type curType = valType;
+            for(int i = 0; i < ctx.L_BRACKT().size(); i ++)
+            {
+                ArrayType arrayType = (ArrayType)curType;
+                curType = arrayType.getContainedType();
+                visit(ctx.L_BRACKT(i));
+                visit(ctx.exp(i));
+                visit(ctx.R_BRACKT(i));
+            }
+            return curType;
         }
         visitChildren(ctx);
         return valType;
