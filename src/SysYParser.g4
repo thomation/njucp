@@ -25,8 +25,8 @@ constInitVal:
 varDecl: btype varDef (COMMA varDef)* SEMICOLON;
 // 变量定义 VarDef → Ident { '[' ConstExp ']' } | Ident { '[' ConstExp ']' } '=' InitVal
 varDef:
-	IDENT (L_BRACKT constExp R_BRACKT)?
-	| IDENT (L_BRACKT constExp R_BRACKT)? ASSIGN initVal;
+	IDENT (L_BRACKT constExp R_BRACKT)*
+	| IDENT (L_BRACKT constExp R_BRACKT)* ASSIGN initVal;
 // 变量初值 InitVal → Exp | '{' [ InitVal { ',' InitVal } ] '}'
 initVal: exp | L_BRACE (initVal (COMMA initVal)*)? R_BRACE;
 // 函数定义 FuncDef → FuncType Ident '(' [FuncFParams] ')' Block 
