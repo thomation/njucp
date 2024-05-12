@@ -8,4 +8,7 @@ public class ArrayType implements Type{
    public Type getContainedType() {
       return contained;
    }
+   public String toString() {
+      return String.format("(%d, %s)", num_elements, contained);
+   }
 }

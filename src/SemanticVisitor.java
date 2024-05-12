@@ -35,7 +35,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             defType = new IntType();
             curScope.put(varName, defType);
         } else { // array
-            for (int i = 0; i < ctx.L_BRACKT().size(); i++) {
+            for (int i = ctx.L_BRACKT().size() - 1; i >= 0; i--) {
                 visit(ctx.L_BRACKT(i));
                 if (ctx.constExp(i).exp().number() == null) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
@@ -51,6 +51,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                 visit(ctx.R_BRACKT(i));
             }
             curScope.put(varName, defType);
+            // System.out.printf("def array:%s, %s\n", varName, defType);
         }
 
         visitChildren(ctx);
