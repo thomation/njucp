@@ -149,9 +149,11 @@ public class PrettyVisitor extends SysYParserBaseVisitor<Void> {
         Void result = this.defaultResult();
         result = handleChild(result, ctx.IDENT());
         if (ctx.L_BRACKT() != null) {
-            result = handleChild(result, ctx.L_BRACKT());
-            result = handleChild(result, ctx.constExp());
-            result = handleChild(result, ctx.R_BRACKT());
+            for (int i = 0; i < ctx.L_BRACKT().size(); i++) {
+                result = handleChild(result, ctx.L_BRACKT(i));
+                result = handleChild(result, ctx.constExp(i));
+                result = handleChild(result, ctx.R_BRACKT(i));
+            }
         }
         if (ctx.ASSIGN() != null) {
             printSpace();
@@ -167,7 +169,7 @@ public class PrettyVisitor extends SysYParserBaseVisitor<Void> {
         Void result = this.defaultResult();
         result = handleChild(result, ctx.IDENT());
         if (ctx.L_BRACKT() != null) {
-            for(int i = 0; i < ctx.L_BRACKT().size(); i ++) {
+            for (int i = 0; i < ctx.L_BRACKT().size(); i++) {
                 result = handleChild(result, ctx.L_BRACKT(i));
                 result = handleChild(result, ctx.constExp(i));
                 result = handleChild(result, ctx.R_BRACKT(i));

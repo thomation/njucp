@@ -24,13 +24,37 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     }
 
     @Override
-    public Type visitVarDef(SysYParser.VarDefContext ctx) {
+    public Type visitConstDef(SysYParser.ConstDefContext ctx) {
         String varName = ctx.IDENT().getText();
+        if (checkVarRedefine(varName, ctx.IDENT().getSymbol().getLine()))
+            return null;
+        if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
+            IntType defType = new IntType();
+            curScope.put(varName, defType);
+            return defType;
+        } else {
+            // TODO: handle array
+        }
+        
+        return visitChildren(ctx);
+    }
+
+    boolean checkVarRedefine(String varName, int line) {
         Type defType = curScope.get(varName);
         if (defType != null) {
-            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, ctx.IDENT().getSymbol().getLine(),
-                    varName);
+            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_VAR, line, varName);
+            return true;
         }
+        return false;
+    }
+
+    @Override
+    public Type visitVarDef(SysYParser.VarDefContext ctx) {
+        Type defType = null;
+        String varName = ctx.IDENT().getText();
+        if (checkVarRedefine(varName, ctx.IDENT().getSymbol().getLine()))
+            return null;
+
         if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
             defType = new IntType();
             curScope.put(varName, defType);
@@ -238,7 +262,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
             return visit(ctx.btype());
         } else {
-
+            // TODO: handle array param
         }
         return visitChildren(ctx);
     }
@@ -247,7 +271,6 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     public Type visitBlock(SysYParser.BlockContext ctx) {
         Scope localScope = new LocalScope(curScope);
         curScope = localScope;
-        // TODO: add param to local scope
         ctx.blockItem().forEach(this::visit);
         curScope = curScope.getEncloseingScope();
         return null;
