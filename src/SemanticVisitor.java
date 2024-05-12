@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
@@ -37,10 +38,10 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             curScope.put(varName, defType);
         } else {
             defType = createArray(ctx.L_BRACKT(), ctx.constExp(), ctx.R_BRACKT());
-            if(defType == null)
+            if (defType == null)
                 return null;
             curScope.put(varName, defType);
-            System.out.printf("def const array:%s, %s\n", varName, defType);
+            // System.out.printf("def const array:%s, %s\n", varName, defType);
         }
 
         return defType;
@@ -56,20 +57,32 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     }
 
     ArrayType createArray(List<TerminalNode> lb, List<SysYParser.ConstExpContext> constExp, List<TerminalNode> rb) {
+        List<SysYParser.ExpContext> exp = new ArrayList<SysYParser.ExpContext>();
+        for (int i = 0; i < constExp.size(); i++)
+            exp.add(constExp.get(i).exp());
+        return createArray2(lb, exp, rb);
+    }
+
+    ArrayType createArray2(List<TerminalNode> lb, List<SysYParser.ExpContext> exp, List<TerminalNode> rb) {
         ArrayType arrayType = null;
-        for (int i = constExp.size() - 1; i >= 0; i--) {
+        int offset = lb.size() - exp.size();
+        for (int i = lb.size() - 1; i >= 0; i--) {
+            int expIndex = i - offset;
+            int arraySize = 0;
             visit(lb.get(i));
-            if (constExp.get(i).exp().number() == null) {
-                OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
-                        lb.get(i).getSymbol().getLine(), constExp.get(i).exp().getText());
-                return null;
+            if (expIndex >= 0) {
+                if (exp.get(expIndex).number() == null) {
+                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
+                            lb.get(i).getSymbol().getLine(), exp.get(expIndex).getText());
+                    return null;
+                }
+                arraySize = Integer.parseInt(exp.get(expIndex).number().getText());
+                visit(exp.get(expIndex));
             }
-            int d = Integer.parseInt(constExp.get(i).exp().number().getText());
-            visit(constExp.get(i));
             if (arrayType == null)
-                arrayType = new ArrayType(new IntType(), d);
+                arrayType = new ArrayType(new IntType(), arraySize);
             else
-                arrayType = new ArrayType(arrayType, d);
+                arrayType = new ArrayType(arrayType, arraySize);
             visit(rb.get(i));
         }
         return arrayType;
@@ -87,10 +100,10 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             curScope.put(varName, defType);
         } else { // array
             defType = createArray(ctx.L_BRACKT(), ctx.constExp(), ctx.R_BRACKT());
-            if(defType == null)
+            if (defType == null)
                 return null;
             curScope.put(varName, defType);
-            System.out.printf("def array:%s, %s\n", varName, defType);
+            // System.out.printf("def array:%s, %s\n", varName, defType);
         }
 
         visitChildren(ctx);
@@ -122,7 +135,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                     for (int i = 0; i < ctx.funcRParams().param().size(); i++) {
                         Type argType = visit(ctx.funcRParams().param(i));
                         Type paramType = functionType.getParamsType().get(i);
-                        System.out.printf("exp:%s, arguments %s, parameters %s\n", ctx.getText(), argType, paramType);
+                        // System.out.printf("exp:%s, arguments %s, parameters %s\n", ctx.getText(), argType, paramType);
                         if (!isTypeMatched(paramType, argType))
                             match = false;
                     }
@@ -227,6 +240,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         if (valType == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_VAR,
                     ctx.IDENT().getSymbol().getLine(), lName);
+            return null;
         }
         if (ctx.L_BRACKT() != null && ctx.L_BRACKT().size() > 0) {
             if (!(valType instanceof ArrayType)) {
@@ -235,7 +249,13 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                 return null;
             }
             Type curType = valType;
+            // System.out.printf("vistval: %s, %s\n", ctx.getText(), valType);
             for (int i = 0; i < ctx.L_BRACKT().size(); i++) {
+                if (!(curType instanceof ArrayType)) {
+                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_DIMENSION,
+                            ctx.IDENT().getSymbol().getLine(), lName);
+                    return null;
+                }
                 ArrayType arrayType = (ArrayType) curType;
                 curType = arrayType.getContainedType();
                 visit(ctx.L_BRACKT(i));
@@ -277,12 +297,14 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
 
     @Override
     public Type visitFuncFParam(SysYParser.FuncFParamContext ctx) {
+        Type paramType = null;
         if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
-            return visit(ctx.btype());
+            paramType = visit(ctx.btype());
         } else {
-            // TODO: handle array param
+            paramType = createArray2(ctx.L_BRACKT(), ctx.exp(), ctx.R_BRACKT());
+            // System.out.printf("def func param array %s is %s\n", ctx.getText(), paramType);
         }
-        return visitChildren(ctx);
+        return paramType;
     }
 
     @Override

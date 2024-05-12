@@ -11,6 +11,9 @@ public class ArrayType implements Type{
       return contained;
    }
    public String toString() {
+      if(num_elements == 0) {
+         return String.format("(dynamic, %s)", contained);
+      }
       return String.format("(%d, %s)", num_elements, contained);
    }
    @Override
