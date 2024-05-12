@@ -1,4 +1,7 @@
+import java.util.List;
+
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     Scope curScope;
@@ -26,17 +29,21 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     @Override
     public Type visitConstDef(SysYParser.ConstDefContext ctx) {
         String varName = ctx.IDENT().getText();
+        Type defType = null;
         if (checkVarRedefine(varName, ctx.IDENT().getSymbol().getLine()))
             return null;
         if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
-            IntType defType = new IntType();
+            defType = new IntType();
             curScope.put(varName, defType);
-            return defType;
         } else {
-            // TODO: handle array
+            defType = createArray(ctx.L_BRACKT(), ctx.constExp(), ctx.R_BRACKT());
+            if(defType == null)
+                return null;
+            curScope.put(varName, defType);
+            System.out.printf("def const array:%s, %s\n", varName, defType);
         }
 
-        return visitChildren(ctx);
+        return defType;
     }
 
     boolean checkVarRedefine(String varName, int line) {
@@ -46,6 +53,26 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             return true;
         }
         return false;
+    }
+
+    ArrayType createArray(List<TerminalNode> lb, List<SysYParser.ConstExpContext> constExp, List<TerminalNode> rb) {
+        ArrayType arrayType = null;
+        for (int i = constExp.size() - 1; i >= 0; i--) {
+            visit(lb.get(i));
+            if (constExp.get(i).exp().number() == null) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
+                        lb.get(i).getSymbol().getLine(), constExp.get(i).exp().getText());
+                return null;
+            }
+            int d = Integer.parseInt(constExp.get(i).exp().number().getText());
+            visit(constExp.get(i));
+            if (arrayType == null)
+                arrayType = new ArrayType(new IntType(), d);
+            else
+                arrayType = new ArrayType(arrayType, d);
+            visit(rb.get(i));
+        }
+        return arrayType;
     }
 
     @Override
@@ -59,23 +86,11 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             defType = new IntType();
             curScope.put(varName, defType);
         } else { // array
-            for (int i = ctx.L_BRACKT().size() - 1; i >= 0; i--) {
-                visit(ctx.L_BRACKT(i));
-                if (ctx.constExp(i).exp().number() == null) {
-                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.ARRAY_SIZE_CONST,
-                            ctx.L_BRACKT(i).getSymbol().getLine(), ctx.constExp(i).exp().getText());
-                    return null;
-                }
-                int d = Integer.parseInt(ctx.constExp(i).exp().number().getText());
-                visit(ctx.constExp(i));
-                if (defType == null)
-                    defType = new ArrayType(new IntType(), d);
-                else
-                    defType = new ArrayType(defType, d);
-                visit(ctx.R_BRACKT(i));
-            }
+            defType = createArray(ctx.L_BRACKT(), ctx.constExp(), ctx.R_BRACKT());
+            if(defType == null)
+                return null;
             curScope.put(varName, defType);
-            // System.out.printf("def array:%s, %s\n", varName, defType);
+            System.out.printf("def array:%s, %s\n", varName, defType);
         }
 
         visitChildren(ctx);
@@ -143,9 +158,6 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             return null;
         }
         switch (symbol.getText()) {
-            // TODO: compute value
-            // case "+":
-            // return lType + rType;
             default:
                 break;
         }
