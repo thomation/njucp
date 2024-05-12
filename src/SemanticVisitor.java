@@ -12,15 +12,15 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     }
 
     @Override
-    public Type visitVarDecl(SysYParser.VarDeclContext ctx) {
-        var typeName = ctx.btype().getText();
-        Type declType = curScope.find(typeName);
-        if (declType == null) {
+    public Type visitBtype(SysYParser.BtypeContext ctx) {
+        var typeName = ctx.getText();
+        Type type = curScope.find(typeName);
+        if (type == null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.UNDEF_TYPE,
-                    ctx.btype().INT().getSymbol().getLine(), typeName);
+                    ctx.INT().getSymbol().getLine(), typeName);
+            return null;
         }
-        visitChildren(ctx);
-        return declType;
+        return type;
     }
 
     @Override
@@ -81,10 +81,10 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                     match = false;
                 } else {
                     for (int i = 0; i < ctx.funcRParams().param().size(); i++) {
-                        Type pt = visit(ctx.funcRParams().param(i));
-                        Type at = functionType.getParamsType().get(i);
-                        System.out.printf("exp:%s, pt %s, at %s\n", ctx.getText(), pt, at);
-                        if (pt.getClass() != at.getClass()) {
+                        Type argType = visit(ctx.funcRParams().param(i));
+                        Type paramType = functionType.getParamsType().get(i);
+                        System.out.printf("exp:%s, arguments %s, parameters %s\n", ctx.getText(), argType, paramType);
+                        if (argType.getClass() != paramType.getClass()) {
                             match = false;
                         }
                     }
@@ -235,6 +235,11 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
 
     @Override
     public Type visitFuncFParam(SysYParser.FuncFParamContext ctx) {
+        if (ctx.L_BRACKT() == null || ctx.L_BRACKT().size() == 0) {
+            return visit(ctx.btype());
+        } else {
+
+        }
         return visitChildren(ctx);
     }
 
