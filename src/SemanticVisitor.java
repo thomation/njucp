@@ -131,7 +131,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
     Type HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
         Type lType = visit(ctx.exp(0));
         Type rType = visit(ctx.exp(1));
-        if (lType.getClass() != rType.getClass()) {
+        if (lType != null && rType != null && lType.getClass() != rType.getClass()) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_OPERANDS, symbol.getLine(),
                     ctx.exp(0).getText() + " = " + ctx.exp(1).getText());
             return null;
