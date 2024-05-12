@@ -28,4 +28,9 @@ public class FunctionType extends BaseScope implements Type {
         return paramsType;
     }
 
+    @Override
+    public boolean isMatched(Type rType) {
+        return this.getClass() == rType.getClass();
+    }
+
 }

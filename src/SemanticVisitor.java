@@ -35,7 +35,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         } else {
             // TODO: handle array
         }
-        
+
         return visitChildren(ctx);
     }
 
@@ -108,9 +108,8 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                         Type argType = visit(ctx.funcRParams().param(i));
                         Type paramType = functionType.getParamsType().get(i);
                         System.out.printf("exp:%s, arguments %s, parameters %s\n", ctx.getText(), argType, paramType);
-                        if (argType.getClass() != paramType.getClass()) {
+                        if (!isTypeMatched(paramType, argType))
                             match = false;
-                        }
                     }
                 }
                 if (!match) {
@@ -128,10 +127,17 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
         return visitChildren(ctx);
     }
 
+    boolean isTypeMatched(Type lType, Type rType) {
+        if (lType == null || rType == null) {
+            return false;
+        }
+        return lType.isMatched(rType);
+    }
+
     Type HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
         Type lType = visit(ctx.exp(0));
         Type rType = visit(ctx.exp(1));
-        if (lType != null && rType != null && lType.getClass() != rType.getClass()) {
+        if (!isTypeMatched(lType, rType)) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_OPERANDS, symbol.getLine(),
                     ctx.exp(0).getText() + " = " + ctx.exp(1).getText());
             return null;
@@ -168,7 +174,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             if (ctx.exp() != null) {
                 Type retType = visit(ctx.exp());
                 FunctionType funcType = findEncloseFuncType();
-                if (funcType == null || retType == null || retType.getClass() != funcType.getRetType().getClass()) {
+                if (!isTypeMatched(funcType.getRetType(), retType)) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
                             funcType.getRetType() + " != " + retType);
@@ -184,20 +190,20 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.LEFT_VAR,
                         ctx.ASSIGN().getSymbol().getLine(),
                         String.format("%s", lType.getClass()));
-
+                return null;
             }
             visit(ctx.ASSIGN());
             Type rType = visit(ctx.exp());
-            if (lType != null && rType != null) {
-                if (lType.getClass() != rType.getClass()) {
-                    OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_ASSIGN,
-                            ctx.ASSIGN().getSymbol().getLine(),
-                            String.format("%s != %s", lType.getClass(), rType.getClass()));
-                }
+            if (!isTypeMatched(lType, lType)) {
+                OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_ASSIGN,
+                        ctx.ASSIGN().getSymbol().getLine(),
+                        String.format("%s != %s", lType.getClass(), rType.getClass()));
             }
+
             visit(ctx.SEMICOLON());
             return null;
         }
+
         Type ret = visitChildren(ctx);
         return ret;
     }
