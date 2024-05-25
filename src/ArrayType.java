@@ -1,5 +1,3 @@
-import org.antlr.v4.parse.ANTLRParser.throwsSpec_return;
-
 public class ArrayType implements Type{
    Type contained;
    int num_elements; 
