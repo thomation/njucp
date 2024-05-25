@@ -21,5 +21,7 @@ public class ParserTest {
         ParseVisitor v3 = new ParseVisitor();
         v3.visit(tree);
         OutputHelper.getInstance().printResult();
+        LLVMVisitor v4 = new LLVMVisitor();
+        v4.visit(tree);
     }
 }
