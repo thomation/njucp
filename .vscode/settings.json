@@ -2,7 +2,12 @@
     "java.project.referencedLibraries": {
         "include": [
             "lib/**/*.jar",
-            "/usr/local/lib/antlr-4.13.1-complete.jar"
+            "/usr/local/lib/antlr-4.13.1-complete.jar",
+            "/usr/local/lib/javacpp-1.5.7.jar",
+            "/usr/local/lib/llvm-13.0.1-1.5.7.jar",
+            "/usr/local/lib/llvm-platform-13.0.1-1.5.7.jar",
+            "/usr/local/lib/javacpp-1.5.7-linux-x86_64.jar",
+            "/usr/local/lib/llvm-13.0.1-1.5.7-linux-x86_64.jar",
         ],
         "exclude": [
             "/usr/local/lib/antlr-4.9.1-complete.jar"
