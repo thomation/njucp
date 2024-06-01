@@ -93,7 +93,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         }
         if (ctx.number() != null) {
             String numString = ctx.number().INTEGER_CONST().getText();
-            int num =Integer.parseInt(numString);
+            int num = Integer.parseInt(numString);
             return LLVMConstInt(i32Type, num, /* signExtend */ 0);
         }
         if (ctx.unaryOp() != null) {
@@ -101,6 +101,9 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         }
         if (ctx.PLUS() != null) {
             return HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
+        }
+        if (ctx.MUL() != null) {
+            return HandleBinaryOP(ctx, ctx.MUL().getSymbol());
         }
         if (ctx.MINUS() != null) {
             return HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
@@ -122,14 +125,18 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         System.out.printf("bop: %s\n", symbol.getText());
         LLVMValueRef lv = visit(ctx.exp(0));
         LLVMValueRef rv = visit(ctx.exp(1));
+        LLVMValueRef result = null;
         switch (symbol.getText()) {
             case "+":
-                LLVMValueRef result = LLVMBuildAdd(builder, lv, rv, /* varName:String */"result");
-                return result;
+                result = LLVMBuildAdd(builder, lv, rv, /* varName:String */"result");
+                break;
+            case "*":
+                result = LLVMBuildMul(builder, lv, rv, "result");
+                break;
             default:
                 break;
         }
-        return null;
+        return result;
     }
 
 }
