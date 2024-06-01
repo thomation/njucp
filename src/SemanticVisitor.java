@@ -277,10 +277,9 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Type> {
             return null;
         }
         String typeString = ctx.funcType().getText();
-        FunctionType funcType = new FunctionType(funcName, curScope);
-        curScope.put(funcName, funcType);
         Type retType = curScope.find(typeString);
-        funcType.setRetType(retType);
+        FunctionType funcType = new FunctionType(funcName, retType, curScope);
+        curScope.put(funcName, funcType);
         if (ctx.funcFParams() != null) {
             for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                 String id = ctx.funcFParams().funcFParam(i).IDENT().getText();

@@ -4,11 +4,8 @@ public class FunctionType extends BaseScope implements Type {
     Type retType;
     ArrayList<Type> paramsType;
 
-    public FunctionType(String funcName, Scope enclosingScope) {
+    public FunctionType(String funcName, Type retType, Scope enclosingScope) {
         super(funcName, enclosingScope);
-    }
-
-    public void setRetType(Type retType) {
         this.retType = retType;
     }
 
