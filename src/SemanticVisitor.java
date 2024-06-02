@@ -166,7 +166,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
     Symbol HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
         Symbol lType = visit(ctx.exp(0));
         Symbol rType = visit(ctx.exp(1));
-        if (!isTypeMatched((Type)lType, (Type)rType)) {
+        if (!isTypeMatched(lType.getType(), rType.getType())) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_OPERANDS, symbol.getLine(),
                     ctx.exp(0).getText() + " = " + ctx.exp(1).getText());
             return null;
@@ -200,7 +200,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             if (ctx.exp() != null) {
                 Symbol retType = visit(ctx.exp());
                 FunctionSymbol funcType = findEncloseFuncType();
-                if (!isTypeMatched(funcType.getRetType(), (Type)retType)) {
+                if (!isTypeMatched(funcType.getRetType(), retType.getType())) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
                             funcType.getRetType() + " != " + retType);

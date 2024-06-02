@@ -42,4 +42,9 @@ public class ArraySymbol implements Type, Symbol {
    public String getName() {
       return name;
    }
+
+   @Override
+   public Type getType() {
+      return this;
+   }
 }
