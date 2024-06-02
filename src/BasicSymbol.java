@@ -1,6 +1,9 @@
+import org.bytedeco.llvm.LLVM.LLVMValueRef;
+
 public class BasicSymbol implements Symbol {
     final String name;
     final Type type;
+    LLVMValueRef value;
     public BasicSymbol(String name, Type type) {
         this.name = name;
         this.type = type;
@@ -11,6 +14,14 @@ public class BasicSymbol implements Symbol {
     }
     public Type getType() {
         return type;
+    }
+    @Override
+    public LLVMValueRef getValue() {
+        return value;
+    }
+    @Override
+    public void setValue(LLVMValueRef value) {
+        this.value = value;
     }
     
 }

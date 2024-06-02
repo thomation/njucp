@@ -36,6 +36,25 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
     }
 
     @Override
+    public LLVMValueRef visitVarDef(SysYParser.VarDefContext ctx) {
+        Symbol defSymbol = null;
+        String varName = ctx.IDENT().getText();
+        defSymbol = new BasicSymbol(varName, new BasicTypeSymbol("int"));
+        curScope.put(defSymbol);
+        LLVMValueRef varValue = visitChildren(ctx);
+        if (curScope == globalScope) {
+            LLVMValueRef globalVar = LLVMAddGlobal(module, i32Type, varName);
+            LLVMSetInitializer(globalVar, varValue);
+            defSymbol.setValue(globalVar);
+            return globalVar;
+        }
+        LLVMValueRef pointer = LLVMBuildAlloca(builder, i32Type, /*pointerName:String*/varName);
+        LLVMBuildStore(builder, varValue, pointer);
+        defSymbol.setValue(pointer);
+        return pointer;
+    }
+
+    @Override
     public LLVMValueRef visitFuncDef(SysYParser.FuncDefContext ctx) {
         String funcName = ctx.IDENT().getText();
         if (curScope.find(funcName) != null) {
@@ -45,7 +64,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         }
         String typeString = ctx.funcType().getText();
         Symbol retType = curScope.find(typeString);
-        FunctionSymbol funcType = new FunctionSymbol(funcName, (Type)retType, curScope);
+        FunctionSymbol funcType = new FunctionSymbol(funcName, (Type) retType, curScope);
         curScope.put(funcType);
         // if (ctx.funcFParams() != null) {
         // for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
@@ -66,6 +85,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
             for (int i = 0; i < ctx.block().blockItem().size(); i++)
                 visit(ctx.block().blockItem(i));
         }
+        funcType.setValue(function);
         return function;
     }
 
@@ -86,10 +106,19 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
 
     @Override
     public LLVMValueRef visitExp(SysYParser.ExpContext ctx) {
-        // System.out.println("exp:" + ctx.getText());
+        System.out.println("exp:" + ctx.getText());
         if (ctx.IDENT() != null) { // function
-            // TODO: get llvm function from scope
             return null;
+        }
+        if(ctx.lVal() != null) { 
+            Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
+            if(symbol == null) {
+                System.err.println("Cannot find symbol:" + ctx.IDENT().getText());
+                return null;
+            }
+            System.out.println("symbole value:" + symbol.getValue());
+            LLVMValueRef value =  LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
+            return value;
         }
         if (ctx.number() != null) {
             String numString = ctx.number().INTEGER_CONST().getText();
@@ -115,7 +144,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         // System.out.printf("uop: %s\n", unary.getText());
         LLVMValueRef v = visit(ctx.exp(0));
         if (unary.MINUS() != null) {
-            LLVMValueRef result = LLVMBuildNeg(builder, v, "result");
+            LLVMValueRef result = LLVMBuildNeg(builder, v, "tmp");
             return result;
         }
         return null;
@@ -128,10 +157,10 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         LLVMValueRef result = null;
         switch (symbol.getText()) {
             case "+":
-                result = LLVMBuildAdd(builder, lv, rv, /* varName:String */"result");
+                result = LLVMBuildAdd(builder, lv, rv, /* varName:String */"tmp");
                 break;
             case "*":
-                result = LLVMBuildMul(builder, lv, rv, "result");
+                result = LLVMBuildMul(builder, lv, rv, "tmp");
                 break;
             default:
                 break;

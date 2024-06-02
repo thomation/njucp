@@ -1,8 +1,11 @@
 import java.util.ArrayList;
 
+import org.bytedeco.llvm.LLVM.LLVMValueRef;
+
 public class FunctionSymbol extends BaseScope implements Type, Symbol {
     Type retType;
     ArrayList<Symbol> paramsSymbol;
+    LLVMValueRef value;
 
     public FunctionSymbol(String funcName, Type retType, Scope enclosingScope) {
         super(funcName, enclosingScope);
@@ -40,4 +43,13 @@ public class FunctionSymbol extends BaseScope implements Type, Symbol {
         return this;
     }
 
+    @Override
+    public LLVMValueRef getValue() {
+        return value;
+    }
+
+    @Override
+    public void setValue(LLVMValueRef value) {
+        this.value = value;
+    }
 }

@@ -1,7 +1,10 @@
+import org.bytedeco.llvm.LLVM.LLVMValueRef;
+
 public class ArraySymbol implements Type, Symbol {
    String name;
    Type contained;
    int num_elements;
+   LLVMValueRef value;
 
    public ArraySymbol(String name, Type contained, int num_elements) {
       this.name = name;
@@ -47,4 +50,13 @@ public class ArraySymbol implements Type, Symbol {
    public Type getType() {
       return this;
    }
+
+    @Override
+    public LLVMValueRef getValue() {
+        return value;
+    }
+    @Override
+    public void setValue(LLVMValueRef value) {
+        this.value = value;
+    }
 }
