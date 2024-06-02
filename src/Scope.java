@@ -1,6 +1,6 @@
 public interface Scope {
-    void put(String name, Type type);
+    void put(Symbol symbol);
     Scope getEncloseingScope();
-    Type find(String name);
-    Type get(String name);
+    Symbol find(String name);
+    Symbol get(String name);
 }

@@ -44,9 +44,9 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
             return null;
         }
         String typeString = ctx.funcType().getText();
-        Type retType = curScope.find(typeString);
-        FunctionType funcType = new FunctionType(funcName, retType, curScope);
-        curScope.put(funcName, funcType);
+        Symbol retType = curScope.find(typeString);
+        FunctionSymbol funcType = new FunctionSymbol(funcName, (Type)retType, curScope);
+        curScope.put(funcType);
         // if (ctx.funcFParams() != null) {
         // for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
         // String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
