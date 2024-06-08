@@ -162,7 +162,18 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
         // assert ret != null : "No exp matched";
         return ret;
     }
-
+    Type getTypeWithSymbol(Symbol symbol)
+    {
+        if(symbol instanceof FunctionSymbol) {
+           return ((FunctionSymbol)symbol).getRetType();
+        }
+        return symbol.getType();
+    }
+    boolean isSymbolTypeMatched(Symbol lSymbol, Symbol rSymbol) {
+        Type lType = getTypeWithSymbol(lSymbol);
+        Type yType = getTypeWithSymbol(rSymbol);
+        return isTypeMatched(lType, yType);
+    }
     boolean isTypeMatched(Type lType, Type rType) {
         if (lType == null || rType == null) {
             return false;
@@ -208,10 +219,10 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
                 Symbol retType = visit(ctx.exp());
                 FunctionSymbol funcType = findEncloseFuncType();
                 // System.out.printf("func:%s, ret:%s\n", funcType, retType);
-                if (funcType == null || retType == null || !isTypeMatched(funcType.getRetType(), retType.getType())) {
+                if (funcType == null || retType == null || !isSymbolTypeMatched(funcType, retType)) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
-                            funcType.getRetType() + " != " + retType);
+                            funcType.getRetType() + " != " + retType.getType());
                 }
                 return retType;
             }
@@ -302,7 +313,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
                 Symbol paramType = visit(ctx.funcFParams().funcFParam(i));
                 assert paramType instanceof BasicTypeSymbol : "array not support";
                 if (paramType instanceof BasicTypeSymbol) {
-                    funcType.addParamSymbol(new BasicSymbol(id, paramType.getType()));
+                    funcType.addParamSymbol(new BasicSymbol(id, (Type)paramType));
                 }
             }
         }
