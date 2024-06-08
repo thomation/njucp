@@ -52,4 +52,13 @@ public class FunctionSymbol extends BaseScope implements Type, Symbol {
     public void setValue(LLVMValueRef value) {
         this.value = value;
     }
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        for(Symbol s : getParamsSymbol()) {
+            sb.append(s.toString());
+            sb.append(";");
+        }
+        return String.format("funcname:%s rettype:%s params:%s\n", scopeName, retType.toString(), sb.toString());
+    }
 }

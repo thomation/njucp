@@ -150,10 +150,16 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             }
 
         }
+        if(ctx.lVal() != null) {
+            
+        }
         if (ctx.PLUS() != null) {
             HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
         }
-        return visitChildren(ctx);
+        Symbol ret = visitChildren(ctx);
+        System.out.println(ret);
+        assert ret != null : "No exp matched";
+        return ret;
     }
 
     boolean isTypeMatched(Type lType, Type rType) {
@@ -200,6 +206,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             if (ctx.exp() != null) {
                 Symbol retType = visit(ctx.exp());
                 FunctionSymbol funcType = findEncloseFuncType();
+                System.out.printf("func:%s, ret:%s\n", funcType, retType);
                 if (!isTypeMatched(funcType.getRetType(), retType.getType())) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
