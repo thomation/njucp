@@ -133,8 +133,8 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
                     match = false;
                 } else {
                     for (int i = 0; i < ctx.funcRParams().param().size(); i++) {
-                        Type argType = (Type)visit(ctx.funcRParams().param(i));
-                        Type paramType = (Type)functionSymbol.getParamsSymbol().get(i);
+                        Type argType = visit(ctx.funcRParams().param(i)).getType();
+                        Type paramType = functionSymbol.getParamsSymbol().get(i).getType();
                         // System.out.printf("exp:%s, arguments %s, parameters %s\n", ctx.getText(),
                         // argType, paramType);
                         if (!isTypeMatched(paramType, argType))
@@ -157,8 +157,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
         }
         Symbol ret = visitChildren(ctx);
-        System.out.println(ret);
-        assert ret != null : "No exp matched";
+        // assert ret != null : "No exp matched";
         return ret;
     }
 
@@ -206,8 +205,8 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             if (ctx.exp() != null) {
                 Symbol retType = visit(ctx.exp());
                 FunctionSymbol funcType = findEncloseFuncType();
-                System.out.printf("func:%s, ret:%s\n", funcType, retType);
-                if (!isTypeMatched(funcType.getRetType(), retType.getType())) {
+                // System.out.printf("func:%s, ret:%s\n", funcType, retType);
+                if (funcType == null || retType == null || !isTypeMatched(funcType.getRetType(), retType.getType())) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
                             funcType.getRetType() + " != " + retType);
@@ -273,6 +272,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             return (ArraySymbol) curType;
         }
         visitChildren(ctx);
+        assert valSymbol != null : "visitlVal null";
         return valSymbol;
     }
 
