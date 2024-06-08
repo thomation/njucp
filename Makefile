@@ -36,6 +36,7 @@ clean:
 	rm -f src/SysYLexer.java src/SysYParser.java src/SysYParserBaseListener.java src/SysYParserBaseVisitor.java src/SysYParserListener.java src/SysYParserVisitor.java
 	rm -rf classes
 	rm -rf out
+	rm -rf src/.antlr
 
 submit: clean
 	git gc
