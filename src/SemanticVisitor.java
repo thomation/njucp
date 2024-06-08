@@ -56,14 +56,16 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
         return false;
     }
 
-    ArraySymbol createArray(String arrayName, List<TerminalNode> lb, List<SysYParser.ConstExpContext> constExp, List<TerminalNode> rb) {
+    ArraySymbol createArray(String arrayName, List<TerminalNode> lb, List<SysYParser.ConstExpContext> constExp,
+            List<TerminalNode> rb) {
         List<SysYParser.ExpContext> exp = new ArrayList<SysYParser.ExpContext>();
         for (int i = 0; i < constExp.size(); i++)
             exp.add(constExp.get(i).exp());
         return createArray2(arrayName, lb, exp, rb);
     }
 
-    ArraySymbol createArray2(String arrayName, List<TerminalNode> lb, List<SysYParser.ExpContext> exp, List<TerminalNode> rb) {
+    ArraySymbol createArray2(String arrayName, List<TerminalNode> lb, List<SysYParser.ExpContext> exp,
+            List<TerminalNode> rb) {
         ArraySymbol arrayType = null;
         int offset = lb.size() - exp.size();
         for (int i = lb.size() - 1; i >= 0; i--) {
@@ -150,8 +152,8 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             }
 
         }
-        if(ctx.lVal() != null) {
-            
+        if (ctx.lVal() != null) {
+
         }
         if (ctx.PLUS() != null) {
             HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
@@ -226,7 +228,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             }
             visit(ctx.ASSIGN());
             Symbol rType = visit(ctx.exp());
-            if (!isTypeMatched((Type)lType, (Type)rType)) {
+            if (!isTypeMatched((Type) lType, (Type) rType)) {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_ASSIGN,
                         ctx.ASSIGN().getSymbol().getLine(),
                         String.format("%s != %s", lType.getClass(), rType.getClass()));
@@ -298,8 +300,10 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                 String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
                 Symbol paramType = visit(ctx.funcFParams().funcFParam(i));
-                // TODO: create new symbol with id;
-                funcType.addParamSymbol(paramType);
+                assert paramType instanceof BasicTypeSymbol : "array not support";
+                if (paramType instanceof BasicTypeSymbol) {
+                    funcType.addParamSymbol(new BasicSymbol(id, paramType.getType()));
+                }
             }
         }
         // Visit block items to forbid create new scope in block.
