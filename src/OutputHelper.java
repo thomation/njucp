@@ -20,9 +20,11 @@ public class OutputHelper {
     public void addSemantic(int depth, String message) {
         nodes.add(new SemanticNode(depth, message));
     }
-
+    public boolean hasError() {
+        return errorList.size() > 0;
+    }
     public void printResult() {
-        if (errorList.size() > 0) {
+        if (hasError()) {
             for (SemanticError semanticError : errorList) {
                 System.err.println(semanticError.toString());
             }
