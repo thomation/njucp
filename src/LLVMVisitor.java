@@ -59,11 +59,6 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
     @Override
     public Symbol visitFuncDef(SysYParser.FuncDefContext ctx) {
         String funcName = ctx.IDENT().getText();
-        if (curScope.find(funcName) != null) {
-            OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_FUNC, ctx.IDENT().getSymbol().getLine(),
-                    funcName);
-            return null;
-        }
         String typeString = ctx.funcType().getText();
         Symbol retType = curScope.find(typeString);
         FunctionSymbol funcType = new FunctionSymbol(funcName, (Type) retType, curScope);
@@ -74,45 +69,39 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                 String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
                 Symbol paramType = visit(ctx.funcFParams().funcFParam(i).btype());
-                System.out.printf("paramType:%s\n", paramType);
+                // System.out.printf("paramType:%s\n", paramType);
                 Symbol param = new BasicSymbol(id, (Type) paramType);
                 funcType.addParamSymbol(param);
                 argumentTypes.put(i, i32Type);
             }
         }
-        System.out.printf("1\n");
         LLVMTypeRef returnType = i32Type;
         LLVMTypeRef ft = LLVMFunctionType(returnType, argumentTypes, /* argumentCount */ paramCount,
                 /* isVariadic */ 0);
         LLVMValueRef function = LLVMAddFunction(module, funcName, ft);
         // Visit block items to forbid create new scope in block.
-        System.out.printf("2\n");
         curScope = funcType;
         if (ctx.block() != null) {
-            System.out.printf("3\n");
             LLVMBasicBlockRef block1 = LLVMAppendBasicBlock(function, funcName + "Entry");
-            System.out.printf("4\n");
             LLVMPositionBuilderAtEnd(builder, block1);
-            System.out.printf("5\n");
             if (ctx.funcFParams() != null) {
                 for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                     String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
                     Symbol paramSymbol = curScope.find(id);
-                    System.out.printf("param:%s\n", paramSymbol);
+                    // System.out.printf("param:%s\n", paramSymbol);
                     LLVMValueRef pointer = LLVMBuildAlloca(builder, i32Type, /* pointerName:String */id);
-                    System.out.printf("point:%s\n", pointer);
+                    // System.out.printf("point:%s\n", pointer);
                     LLVMValueRef paramValue = LLVMGetParam(function, /* parameterIndex */i);
-                    System.out.printf("param %d value:%s\n", i, paramValue);
+                    // System.out.printf("param %d value:%s\n", i, paramValue);
                     LLVMBuildStore(builder, paramValue, pointer);
                     paramSymbol.setValue(pointer);
                 }
             }
             for (int i = 0; i < ctx.block().blockItem().size(); i++)
                 visit(ctx.block().blockItem(i));
-            System.out.printf("6\n");
         }
-        System.out.printf("7\n");
         funcType.setValue(function);
+        funcType.setLLVMType(ft);
         return funcType;
     }
 
@@ -121,7 +110,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
                 Symbol result = visit(ctx.exp());
-                System.out.printf("VisitStmp %s symbol %s\n", ctx.getText(), result);
+                // System.out.printf("VisitStmp %s symbol %s\n", ctx.getText(), result);
                 LLVMBuildRet(builder, /* result:LLVMValueRef */result.getValue());
                 return result;
             }
@@ -136,7 +125,20 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
     public Symbol visitExp(SysYParser.ExpContext ctx) {
         // System.out.println("exp:" + ctx.getText());
         if (ctx.IDENT() != null) { // function
-            return null;
+            // visitChildren(ctx);
+            String fName = ctx.IDENT().getText();
+            Symbol type = curScope.find(fName);
+            FunctionSymbol functionSymbol = (FunctionSymbol) type;
+            int numArgs = ctx.funcRParams() != null ? ctx.funcRParams().param().size() : 0;
+            PointerPointer<LLVMValueRef> params = new PointerPointer<LLVMValueRef>(numArgs);
+            for (int i = 0; i < ctx.funcRParams().param().size(); i++) {
+                Symbol argSymbol = visit(ctx.funcRParams().param(i));
+                params.put(i, argSymbol.getValue());
+            }
+            LLVMValueRef ret = LLVMBuildCall2(builder, functionSymbol.getLLVMType(), functionSymbol.getValue(), params, numArgs, "returnValue");
+            Symbol callSymbol = new BasicSymbol(functionSymbol.getName() + "_return", functionSymbol.getType());
+            callSymbol.setValue(ret);
+            return callSymbol;
         }
         if (ctx.lVal() != null) {
             Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
@@ -144,7 +146,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
                 System.err.println("Cannot find symbol:" + ctx.lVal().IDENT().getText());
                 return null;
             }
-            System.out.println("symbol value:" + symbol.getValue());
+            // System.out.println("symbol value:" + symbol.getValue());
             LLVMValueRef value = LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
             symbol.setValue(value);
             return symbol;
