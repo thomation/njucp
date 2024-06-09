@@ -113,7 +113,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         if(ctx.lVal() != null) { 
             Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
             if(symbol == null) {
-                System.err.println("Cannot find symbol:" + ctx.IDENT().getText());
+                System.err.println("Cannot find symbol:" + ctx.lVal().IDENT().getText());
                 return null;
             }
             System.out.println("symbole value:" + symbol.getValue());
