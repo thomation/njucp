@@ -5,7 +5,7 @@ import org.antlr.v4.runtime.Token;
 import org.bytedeco.javacpp.Pointer;
 import org.bytedeco.javacpp.PointerPointer;
 
-public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
+public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
     Scope curScope;
     GlobalScope globalScope;
     LLVMModuleRef module;
@@ -23,39 +23,40 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
     }
 
     @Override
-    public LLVMValueRef visitProgram(SysYParser.ProgramContext ctx) {
+    public Symbol visitProgram(SysYParser.ProgramContext ctx) {
         globalScope = new GlobalScope(null);
         curScope = globalScope;
         module = LLVMModuleCreateWithName("module");
         builder = LLVMCreateBuilder();
         i32Type = LLVMInt32Type();
 
-        LLVMValueRef ret = visitChildren(ctx);
+        Symbol ret = visitChildren(ctx);
         LLVMDumpModule(module);
         return ret;
     }
 
     @Override
-    public LLVMValueRef visitVarDef(SysYParser.VarDefContext ctx) {
+    public Symbol visitVarDef(SysYParser.VarDefContext ctx) {
         Symbol defSymbol = null;
         String varName = ctx.IDENT().getText();
         defSymbol = new BasicSymbol(varName, new BasicTypeSymbol("int"));
         curScope.put(defSymbol);
-        LLVMValueRef varValue = visitChildren(ctx);
+        Symbol varValue = visitChildren(ctx);
+        // System.out.printf("visitVarDef ctx:%s varValue:%s\n", ctx.getText(), varValue);
         if (curScope == globalScope) {
             LLVMValueRef globalVar = LLVMAddGlobal(module, i32Type, varName);
-            LLVMSetInitializer(globalVar, varValue);
+            LLVMSetInitializer(globalVar, varValue.getValue());
             defSymbol.setValue(globalVar);
-            return globalVar;
+        } else {
+            LLVMValueRef pointer = LLVMBuildAlloca(builder, i32Type, /* pointerName:String */varName);
+            LLVMBuildStore(builder, varValue.getValue(), pointer);
+            defSymbol.setValue(pointer);
         }
-        LLVMValueRef pointer = LLVMBuildAlloca(builder, i32Type, /*pointerName:String*/varName);
-        LLVMBuildStore(builder, varValue, pointer);
-        defSymbol.setValue(pointer);
-        return pointer;
+        return defSymbol;
     }
 
     @Override
-    public LLVMValueRef visitFuncDef(SysYParser.FuncDefContext ctx) {
+    public Symbol visitFuncDef(SysYParser.FuncDefContext ctx) {
         String funcName = ctx.IDENT().getText();
         if (curScope.find(funcName) != null) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.REDEF_FUNC, ctx.IDENT().getSymbol().getLine(),
@@ -69,8 +70,8 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         // if (ctx.funcFParams() != null) {
         // for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
         // String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
-        // Type paramType = visit(ctx.funcFParams().funcFParam(i));
-        // funcType.addParamType(id, paramType);
+        // LLVMValueRef paramType = visit(ctx.funcFParams().funcFParam(i));
+        // funcType.addParamSymbol(id, paramType);
         // }
         // }
         LLVMTypeRef returnType = i32Type;
@@ -86,15 +87,15 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
                 visit(ctx.block().blockItem(i));
         }
         funcType.setValue(function);
-        return function;
+        return funcType;
     }
 
     @Override
-    public LLVMValueRef visitStmt(SysYParser.StmtContext ctx) {
+    public Symbol visitStmt(SysYParser.StmtContext ctx) {
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
-                LLVMValueRef result = visit(ctx.exp());
-                LLVMBuildRet(builder, /* result:LLVMValueRef */result);
+                Symbol result = visit(ctx.exp());
+                LLVMBuildRet(builder, /* result:LLVMValueRef */result.getValue());
                 return result;
             }
             visit(ctx.SEMICOLON());
@@ -105,25 +106,29 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
     }
 
     @Override
-    public LLVMValueRef visitExp(SysYParser.ExpContext ctx) {
-        System.out.println("exp:" + ctx.getText());
+    public Symbol visitExp(SysYParser.ExpContext ctx) {
+        // System.out.println("exp:" + ctx.getText());
         if (ctx.IDENT() != null) { // function
             return null;
         }
-        if(ctx.lVal() != null) { 
+        if (ctx.lVal() != null) {
             Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
-            if(symbol == null) {
+            if (symbol == null) {
                 System.err.println("Cannot find symbol:" + ctx.lVal().IDENT().getText());
                 return null;
             }
-            System.out.println("symbole value:" + symbol.getValue());
-            LLVMValueRef value =  LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
-            return value;
+            // System.out.println("symbole value:" + symbol.getValue());
+            LLVMValueRef value = LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
+            symbol.setValue(value);
+            return symbol;
         }
         if (ctx.number() != null) {
             String numString = ctx.number().INTEGER_CONST().getText();
             int num = Integer.parseInt(numString);
-            return LLVMConstInt(i32Type, num, /* signExtend */ 0);
+            LLVMValueRef value = LLVMConstInt(i32Type, num, /* signExtend */ 0);
+            Symbol symbol = new BasicSymbol(numString, new BasicTypeSymbol("int"));
+            symbol.setValue(value);
+            return symbol;
         }
         if (ctx.unaryOp() != null) {
             return HandleUnaryOP(ctx, ctx.unaryOp());
@@ -137,34 +142,40 @@ public class LLVMVisitor extends SysYParserBaseVisitor<LLVMValueRef> {
         if (ctx.MINUS() != null) {
             return HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
         }
-        return visitChildren(ctx);
+        Symbol ret = visitChildren(ctx);
+        assert ret != null : "exp error:" + ctx.getText();
+        return ret;
     }
 
-    LLVMValueRef HandleUnaryOP(SysYParser.ExpContext ctx, SysYParser.UnaryOpContext unary) {
+    Symbol HandleUnaryOP(SysYParser.ExpContext ctx, SysYParser.UnaryOpContext unary) {
         // System.out.printf("uop: %s\n", unary.getText());
-        LLVMValueRef v = visit(ctx.exp(0));
+        Symbol expSymbol = visit(ctx.exp(0));
         if (unary.MINUS() != null) {
-            LLVMValueRef result = LLVMBuildNeg(builder, v, "tmp");
+            LLVMValueRef valueRef = LLVMBuildNeg(builder, expSymbol.getValue(), "tmp_");
+            Symbol result = new BasicSymbol("tmp", new BasicTypeSymbol("int"));
+            result.setValue(valueRef);
             return result;
         }
         return null;
     }
 
-    LLVMValueRef HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
-        System.out.printf("bop: %s\n", symbol.getText());
-        LLVMValueRef lv = visit(ctx.exp(0));
-        LLVMValueRef rv = visit(ctx.exp(1));
-        LLVMValueRef result = null;
+    Symbol HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
+        // System.out.printf("bop: %s\n", symbol.getText());
+        LLVMValueRef lv = visit(ctx.exp(0)).getValue();
+        LLVMValueRef rv = visit(ctx.exp(1)).getValue();
+        LLVMValueRef valueRef = null;
         switch (symbol.getText()) {
             case "+":
-                result = LLVMBuildAdd(builder, lv, rv, /* varName:String */"tmp");
+                valueRef = LLVMBuildAdd(builder, lv, rv, /* varName:String */"tmp_");
                 break;
             case "*":
-                result = LLVMBuildMul(builder, lv, rv, "tmp");
+                valueRef = LLVMBuildMul(builder, lv, rv, "tmp_");
                 break;
             default:
                 break;
         }
+        Symbol result = new BasicSymbol(valueRef.toString(), new BasicTypeSymbol("int"));
+        result.setValue(valueRef);
         return result;
     }
 
