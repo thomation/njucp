@@ -138,22 +138,21 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             LLVMBasicBlockRef exit = LLVMAppendBasicBlock(functionSymbol.getValue(), "true");
             LLVMBasicBlockRef ifFalse = LLVMAppendBasicBlock(functionSymbol.getValue(), "false");
             LLVMBasicBlockRef entry = LLVMAppendBasicBlock(functionSymbol.getValue(), "entry");
-            if (ctx.ELSE() != null) {
-                LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
-            } else {
-                LLVMBuildCondBr(builder, condSymbol.getValue(), exit, null);
-            }
+            LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
+            // if block
             buildBlock(ctx.stmt(0), exit);
             LLVMBuildBr(builder, entry);
+            // else block
+            LLVMPositionBuilderAtEnd(builder, ifFalse);
             if (ctx.ELSE() != null) {
-                LLVMPositionBuilderAtEnd(builder, ifFalse);
                 buildBlock(ctx.stmt(1), ifFalse);
-                LLVMBuildBr(builder, entry);
             }
+            LLVMBuildBr(builder, entry);
+
             LLVMPositionBuilderAtEnd(builder, entry);
             return null;
         }
-        if(ctx.WHILE() != null) {
+        if (ctx.WHILE() != null) {
             FunctionSymbol functionSymbol = getEnclosedFunction();
             LLVMBasicBlockRef conditon = LLVMAppendBasicBlock(functionSymbol.getValue(), "whileCondition");
             LLVMBasicBlockRef body = LLVMAppendBasicBlock(functionSymbol.getValue(), "whileBody");
@@ -180,7 +179,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
     }
 
     void buildBlock(SysYParser.StmtContext stmt, LLVMBasicBlockRef llvmBlock) {
-        if(stmt.block() != null) {
+        if (stmt.block() != null) {
             LLVMPositionBuilderAtEnd(builder, llvmBlock);
             for (int i = 0; i < stmt.block().blockItem().size(); i++)
                 visit(stmt.block().blockItem(i));
@@ -288,6 +287,12 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         Symbol condSymbol = new BasicSymbol("tmp_", null);
         if (ctx.NEQ() != null) {
             condSymbol.setValue(LLVMBuildICmp(builder, LLVMIntNE, lc.getValue(), rc.getValue(), "tmp_"));
+        }
+        if (ctx.LT() != null) {
+            condSymbol.setValue(LLVMBuildICmp(builder, LLVMIntSLT, lc.getValue(), rc.getValue(), "tmp_"));
+        }
+        if (ctx.LE() != null) {
+            condSymbol.setValue(LLVMBuildICmp(builder, LLVMIntSLE, lc.getValue(), rc.getValue(), "tmp_"));
         }
         return condSymbol;
     }
