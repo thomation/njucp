@@ -107,6 +107,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
 
     @Override
     public Symbol visitStmt(SysYParser.StmtContext ctx) {
+        // System.out.printf("visitStmt:%s\n", ctx.getText());
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
                 Symbol result = visit(ctx.exp());
@@ -142,14 +143,10 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         }
         if (ctx.lVal() != null) {
             Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
-            if (symbol == null) {
-                System.err.println("Cannot find symbol:" + ctx.lVal().IDENT().getText());
-                return null;
-            }
-            // System.out.println("symbol value:" + symbol.getValue());
             LLVMValueRef value = LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
-            symbol.setValue(value);
-            return symbol;
+            Symbol symbol2 = new BasicSymbol(ctx.lVal().IDENT().getText(), symbol.getType());
+            symbol2.setValue(value);
+            return symbol2;
         }
         if (ctx.number() != null) {
             String numString = ctx.number().INTEGER_CONST().getText();
