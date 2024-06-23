@@ -70,6 +70,6 @@ public class FunctionSymbol extends BaseScope implements Type, Symbol {
                 sb.append(";");
             }
         }
-        return String.format("funcname:%s rettype:%s params:%s\n", scopeName, retType.toString(), sb.toString());
+        return String.format("funcname:%s rettype:%s params:%s;llvmValue:%s\n", scopeName, retType.toString(), sb.toString(), value);
     }
 }

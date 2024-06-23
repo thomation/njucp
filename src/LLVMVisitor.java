@@ -81,9 +81,12 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         LLVMValueRef function = LLVMAddFunction(module, funcName, ft);
         // Visit block items to forbid create new scope in block.
         curScope = funcType;
+        funcType.setValue(function);
+        funcType.setLLVMType(ft);
         if (ctx.block() != null) {
             LLVMBasicBlockRef block1 = LLVMAppendBasicBlock(function, funcName + "Entry");
             LLVMPositionBuilderAtEnd(builder, block1);
+            System.out.println("function:" + function);
             if (ctx.funcFParams() != null) {
                 for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                     String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
@@ -97,11 +100,10 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
                     paramSymbol.setValue(pointer);
                 }
             }
-            for (int i = 0; i < ctx.block().blockItem().size(); i++)
+            for (int i = 0; i < ctx.block().blockItem().size(); i++) {
                 visit(ctx.block().blockItem(i));
+            }
         }
-        funcType.setValue(function);
-        funcType.setLLVMType(ft);
         return funcType;
     }
 
@@ -131,25 +133,26 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         if (ctx.IF() != null) {
             Symbol condSymbol = visit(ctx.cond());
             FunctionSymbol functionSymbol = getEnclosedFunction();
+            // System.out.println("get function:" + functionSymbol.getValue());
             LLVMBasicBlockRef exit = LLVMAppendBasicBlock(functionSymbol.getValue(), "true");
             LLVMBasicBlockRef ifFalse = LLVMAppendBasicBlock(functionSymbol.getValue(), "false");
             LLVMBasicBlockRef entry = LLVMAppendBasicBlock(functionSymbol.getValue(), "entry");
-            // LLVMPositionBuilderAtEnd(builder, exit);
             if (ctx.ELSE() != null) {
                 LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
             } else {
                 LLVMBuildCondBr(builder, condSymbol.getValue(), exit, null);
             }
+            LLVMPositionBuilderAtEnd(builder, exit);
             for (int i = 0; i < ctx.stmt(0).block().blockItem().size(); i++)
                 visit(ctx.stmt(0).block().blockItem(i));
             LLVMBuildBr(builder, entry);
             if (ctx.ELSE() != null) {
-                // LLVMPositionBuilderAtEnd(builder, ifFalse);
-                for (int i = 0; i < ctx.stmt(0).block().blockItem().size(); i++)
-                    visit(ctx.stmt(0).block().blockItem(i));
+                LLVMPositionBuilderAtEnd(builder, ifFalse);
+                for (int i = 0; i < ctx.stmt(1).block().blockItem().size(); i++)
+                    visit(ctx.stmt(1).block().blockItem(i));
                 LLVMBuildBr(builder, entry);
             }
-            // LLVMPositionBuilderAtEnd(builder, entry);
+            LLVMPositionBuilderAtEnd(builder, entry);
             return null;
         }
         return visitChildren(ctx);
@@ -160,7 +163,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         while (!(scope instanceof FunctionSymbol)) {
             scope = curScope.getEncloseingScope();
         }
-        assert scope != null : "no func scop";
+        assert scope != null && scope instanceof FunctionSymbol: "no func scop";
         return (FunctionSymbol) scope;
     }
 
