@@ -170,9 +170,28 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
         return symbol.getType();
     }
     boolean isSymbolTypeMatched(Symbol lSymbol, Symbol rSymbol) {
+        if(lSymbol instanceof BasicTypeSymbol) {
+            return isSymbolOfBasicType(rSymbol, (BasicTypeSymbol)lSymbol);
+        }
+        if(rSymbol instanceof BasicTypeSymbol) {
+            return isSymbolOfBasicType(lSymbol, (BasicTypeSymbol)rSymbol);
+        }
         Type lType = getTypeWithSymbol(lSymbol);
-        Type yType = getTypeWithSymbol(rSymbol);
-        return isTypeMatched(lType, yType);
+        Type rType = getTypeWithSymbol(rSymbol);
+        return isTypeMatched(lType, rType);
+    }
+    boolean isSymbolOfBasicType(Symbol symbol, BasicTypeSymbol basicTypeSymbol) {
+        if(symbol instanceof BasicTypeSymbol) {
+            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol)symbol);
+        }
+        Type type = symbol.getType();
+        if(type instanceof BasicTypeSymbol) {
+            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol)type);
+        }
+        return false;
+    }
+    boolean isBasicTypeSymbolMatched(BasicTypeSymbol lSymbol, BasicTypeSymbol rSymbol) {
+        return lSymbol.name.equals(rSymbol.name);
     }
     boolean isTypeMatched(Type lType, Type rType) {
         if (lType == null || rType == null) {
@@ -239,7 +258,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
             }
             visit(ctx.ASSIGN());
             Symbol rType = visit(ctx.exp());
-            if (!isTypeMatched((Type) lType, (Type) rType)) {
+            if (!isSymbolTypeMatched(lType, rType)) {
                 OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_ASSIGN,
                         ctx.ASSIGN().getSymbol().getLine(),
                         String.format("%s != %s", lType.getClass(), rType.getClass()));
