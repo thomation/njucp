@@ -107,11 +107,11 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
 
     @Override
     public Symbol visitStmt(SysYParser.StmtContext ctx) {
-        // System.out.printf("visitStmt:%s\n", ctx.getText());
+        System.out.printf("visitStmt:%s\n", ctx.getText());
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
                 Symbol result = visit(ctx.exp());
-                // System.out.printf("VisitStmp %s symbol %s\n", ctx.getText(), result);
+                System.out.printf("VisitStmp %s symbol %s\n", ctx.getText(), result);
                 LLVMBuildRet(builder, /* result:LLVMValueRef */result.getValue());
                 return result;
             }
@@ -119,7 +119,49 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             LLVMBuildRet(builder, null);
             return null;
         }
+        if (ctx.ASSIGN() != null) {
+            System.out.printf("assign \n");
+            Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
+            System.out.printf("assign to %s value: %s, from scope %s\n", symbol, symbol.getValue(), curScope);
+            LLVMValueRef value = LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
+            Symbol r = visit(ctx.exp());
+            System.out.printf("%s = %s \n", value, r);
+            LLVMBuildStore(builder, r.getValue(), value);
+        }
+        if (ctx.IF() != null) {
+            Symbol condSymbol = visit(ctx.cond());
+            FunctionSymbol functionSymbol = getEnclosedFunction();
+            LLVMBasicBlockRef exit = LLVMAppendBasicBlock(functionSymbol.getValue(), "true");
+            LLVMBasicBlockRef ifFalse = LLVMAppendBasicBlock(functionSymbol.getValue(), "false");
+            LLVMBasicBlockRef entry = LLVMAppendBasicBlock(functionSymbol.getValue(), "entry");
+            // LLVMPositionBuilderAtEnd(builder, exit);
+            if (ctx.ELSE() != null) {
+                LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
+            } else {
+                LLVMBuildCondBr(builder, condSymbol.getValue(), exit, null);
+            }
+            for (int i = 0; i < ctx.stmt(0).block().blockItem().size(); i++)
+                visit(ctx.stmt(0).block().blockItem(i));
+            LLVMBuildBr(builder, entry);
+            if (ctx.ELSE() != null) {
+                // LLVMPositionBuilderAtEnd(builder, ifFalse);
+                for (int i = 0; i < ctx.stmt(0).block().blockItem().size(); i++)
+                    visit(ctx.stmt(0).block().blockItem(i));
+                LLVMBuildBr(builder, entry);
+            }
+            // LLVMPositionBuilderAtEnd(builder, entry);
+            return null;
+        }
         return visitChildren(ctx);
+    }
+
+    FunctionSymbol getEnclosedFunction() {
+        Scope scope = curScope;
+        while (!(scope instanceof FunctionSymbol)) {
+            scope = curScope.getEncloseingScope();
+        }
+        assert scope != null : "no func scop";
+        return (FunctionSymbol) scope;
     }
 
     @Override
@@ -136,7 +178,8 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
                 Symbol argSymbol = visit(ctx.funcRParams().param(i));
                 params.put(i, argSymbol.getValue());
             }
-            LLVMValueRef ret = LLVMBuildCall2(builder, functionSymbol.getLLVMType(), functionSymbol.getValue(), params, numArgs, "returnValue");
+            LLVMValueRef ret = LLVMBuildCall2(builder, functionSymbol.getLLVMType(), functionSymbol.getValue(), params,
+                    numArgs, "returnValue");
             Symbol callSymbol = new BasicSymbol(functionSymbol.getName() + "_return", functionSymbol.getType());
             callSymbol.setValue(ret);
             return callSymbol;
@@ -205,4 +248,17 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         return result;
     }
 
+    @Override
+    public Symbol visitCond(SysYParser.CondContext ctx) {
+        if (ctx.exp() != null) {
+            return visit(ctx.exp());
+        }
+        Symbol lc = visit(ctx.cond(0));
+        Symbol rc = visit(ctx.cond(1));
+        Symbol condSymbol = new BasicSymbol("tmp_", null);
+        if (ctx.NEQ() != null) {
+            condSymbol.setValue(LLVMBuildICmp(builder, LLVMIntNE, lc.getValue(), rc.getValue(), "tmp_"));
+        }
+        return condSymbol;
+    }
 }
