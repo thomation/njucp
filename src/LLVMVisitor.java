@@ -1,4 +1,5 @@
 import org.bytedeco.llvm.LLVM.*;
+
 import static org.bytedeco.llvm.global.LLVM.*;
 
 import org.antlr.v4.runtime.Token;
@@ -142,14 +143,11 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             } else {
                 LLVMBuildCondBr(builder, condSymbol.getValue(), exit, null);
             }
-            LLVMPositionBuilderAtEnd(builder, exit);
-            for (int i = 0; i < ctx.stmt(0).block().blockItem().size(); i++)
-                visit(ctx.stmt(0).block().blockItem(i));
+            buildBlock(ctx.stmt(0).block(), exit);
             LLVMBuildBr(builder, entry);
             if (ctx.ELSE() != null) {
                 LLVMPositionBuilderAtEnd(builder, ifFalse);
-                for (int i = 0; i < ctx.stmt(1).block().blockItem().size(); i++)
-                    visit(ctx.stmt(1).block().blockItem(i));
+                buildBlock(ctx.stmt(1).block(), ifFalse);
                 LLVMBuildBr(builder, entry);
             }
             LLVMPositionBuilderAtEnd(builder, entry);
@@ -163,8 +161,14 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         while (!(scope instanceof FunctionSymbol)) {
             scope = curScope.getEncloseingScope();
         }
-        assert scope != null && scope instanceof FunctionSymbol: "no func scop";
+        assert scope != null && scope instanceof FunctionSymbol : "no func scop";
         return (FunctionSymbol) scope;
+    }
+
+    void buildBlock(SysYParser.BlockContext block, LLVMBasicBlockRef llvmBlock) {
+        LLVMPositionBuilderAtEnd(builder, llvmBlock);
+        for (int i = 0; i < block.blockItem().size(); i++)
+            visit(block.blockItem(i));
     }
 
     @Override
