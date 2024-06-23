@@ -153,6 +153,20 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             LLVMPositionBuilderAtEnd(builder, entry);
             return null;
         }
+        if(ctx.WHILE() != null) {
+            FunctionSymbol functionSymbol = getEnclosedFunction();
+            LLVMBasicBlockRef conditon = LLVMAppendBasicBlock(functionSymbol.getValue(), "whileCondition");
+            LLVMBasicBlockRef body = LLVMAppendBasicBlock(functionSymbol.getValue(), "whileBody");
+            LLVMBasicBlockRef entry = LLVMAppendBasicBlock(functionSymbol.getValue(), "entry");
+            LLVMPositionBuilderAtEnd(builder, conditon);
+            Symbol condSymbol = visit(ctx.cond());
+            LLVMBuildCondBr(builder, condSymbol.getValue(), body, entry);
+            LLVMPositionBuilderAtEnd(builder, body);
+            buildBlock(ctx.stmt(0), body);
+            LLVMBuildBr(builder, conditon);
+            LLVMPositionBuilderAtEnd(builder, entry);
+            return null;
+        }
         return visitChildren(ctx);
     }
 
