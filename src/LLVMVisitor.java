@@ -216,7 +216,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             return HandleBinaryOP(ctx, ctx.MUL().getSymbol());
         }
         if (ctx.MINUS() != null) {
-            return HandleBinaryOP(ctx, ctx.PLUS().getSymbol());
+            return HandleBinaryOP(ctx, ctx.MINUS().getSymbol());
         }
         Symbol ret = visitChildren(ctx);
         assert ret != null : "exp error:" + ctx.getText();
@@ -250,6 +250,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             default:
                 break;
         }
+        assert valueRef != null : "error! operator is not handled" + ctx.getText();
         Symbol result = new BasicSymbol(valueRef.toString(), new BasicTypeSymbol("int"));
         result.setValue(valueRef);
         return result;
