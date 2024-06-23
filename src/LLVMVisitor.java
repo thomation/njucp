@@ -87,7 +87,6 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         if (ctx.block() != null) {
             LLVMBasicBlockRef block1 = LLVMAppendBasicBlock(function, funcName + "Entry");
             LLVMPositionBuilderAtEnd(builder, block1);
-            System.out.println("function:" + function);
             if (ctx.funcFParams() != null) {
                 for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {
                     String id = ctx.funcFParams().funcFParam(i).IDENT().getText();
@@ -114,7 +113,6 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
                 Symbol result = visit(ctx.exp());
-                System.out.printf("VisitStmp %s symbol %s\n", ctx.getText(), result);
                 LLVMBuildRet(builder, /* result:LLVMValueRef */result.getValue());
                 return result;
             }
@@ -123,13 +121,11 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             return null;
         }
         if (ctx.ASSIGN() != null) {
-            System.out.printf("assign \n");
             Symbol symbol = curScope.find(ctx.lVal().IDENT().getText());
-            System.out.printf("assign to %s value: %s, from scope %s\n", symbol, symbol.getValue(), curScope);
             LLVMValueRef value = LLVMBuildLoad(builder, symbol.getValue(), ctx.lVal().IDENT().getText());
             Symbol r = visit(ctx.exp());
-            System.out.printf("%s = %s \n", value, r);
             LLVMBuildStore(builder, r.getValue(), value);
+            return null;
         }
         if (ctx.IF() != null) {
             Symbol condSymbol = visit(ctx.cond());
@@ -140,12 +136,13 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             LLVMBasicBlockRef entry = LLVMAppendBasicBlock(functionSymbol.getValue(), "entry");
             LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
             // if block
-            buildBlock(ctx.stmt(0), exit);
+            LLVMPositionBuilderAtEnd(builder, exit);
+            buildBlock(ctx.stmt(0));
             LLVMBuildBr(builder, entry);
             // else block
             LLVMPositionBuilderAtEnd(builder, ifFalse);
             if (ctx.ELSE() != null) {
-                buildBlock(ctx.stmt(1), ifFalse);
+                buildBlock(ctx.stmt(1));
             }
             LLVMBuildBr(builder, entry);
 
@@ -161,7 +158,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             Symbol condSymbol = visit(ctx.cond());
             LLVMBuildCondBr(builder, condSymbol.getValue(), body, entry);
             LLVMPositionBuilderAtEnd(builder, body);
-            buildBlock(ctx.stmt(0), body);
+            buildBlock(ctx.stmt(0));
             LLVMBuildBr(builder, conditon);
             LLVMPositionBuilderAtEnd(builder, entry);
             return null;
@@ -178,9 +175,8 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         return (FunctionSymbol) scope;
     }
 
-    void buildBlock(SysYParser.StmtContext stmt, LLVMBasicBlockRef llvmBlock) {
+    void buildBlock(SysYParser.StmtContext stmt) {
         if (stmt.block() != null) {
-            LLVMPositionBuilderAtEnd(builder, llvmBlock);
             for (int i = 0; i < stmt.block().blockItem().size(); i++)
                 visit(stmt.block().blockItem(i));
         }
