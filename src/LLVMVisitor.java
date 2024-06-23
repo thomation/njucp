@@ -143,11 +143,11 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             } else {
                 LLVMBuildCondBr(builder, condSymbol.getValue(), exit, null);
             }
-            buildBlock(ctx.stmt(0).block(), exit);
+            buildBlock(ctx.stmt(0), exit);
             LLVMBuildBr(builder, entry);
             if (ctx.ELSE() != null) {
                 LLVMPositionBuilderAtEnd(builder, ifFalse);
-                buildBlock(ctx.stmt(1).block(), ifFalse);
+                buildBlock(ctx.stmt(1), ifFalse);
                 LLVMBuildBr(builder, entry);
             }
             LLVMPositionBuilderAtEnd(builder, entry);
@@ -165,10 +165,12 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         return (FunctionSymbol) scope;
     }
 
-    void buildBlock(SysYParser.BlockContext block, LLVMBasicBlockRef llvmBlock) {
-        LLVMPositionBuilderAtEnd(builder, llvmBlock);
-        for (int i = 0; i < block.blockItem().size(); i++)
-            visit(block.blockItem(i));
+    void buildBlock(SysYParser.StmtContext stmt, LLVMBasicBlockRef llvmBlock) {
+        if(stmt.block() != null) {
+            LLVMPositionBuilderAtEnd(builder, llvmBlock);
+            for (int i = 0; i < stmt.block().blockItem().size(); i++)
+                visit(stmt.block().blockItem(i));
+        }
     }
 
     @Override
@@ -242,15 +244,21 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         LLVMValueRef valueRef = null;
         switch (symbol.getText()) {
             case "+":
-                valueRef = LLVMBuildAdd(builder, lv, rv, /* varName:String */"tmp_");
+                valueRef = LLVMBuildAdd(builder, lv, rv, "tmp_");
+                break;
+            case "-":
+                valueRef = LLVMBuildSub(builder, lv, rv, "tmp_");
                 break;
             case "*":
                 valueRef = LLVMBuildMul(builder, lv, rv, "tmp_");
                 break;
+            case "/":
+                valueRef = LLVMBuildUDiv(builder, lv, rv, "tmp_");
+                break;
             default:
                 break;
         }
-        assert valueRef != null : "error! operator is not handled" + ctx.getText();
+        assert valueRef != null : "error! operator is not handled:" + ctx.getText();
         Symbol result = new BasicSymbol(valueRef.toString(), new BasicTypeSymbol("int"));
         result.setValue(valueRef);
         return result;
