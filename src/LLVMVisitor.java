@@ -137,12 +137,12 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             LLVMBuildCondBr(builder, condSymbol.getValue(), exit, ifFalse);
             // if block
             LLVMPositionBuilderAtEnd(builder, exit);
-            buildBlock(ctx.stmt(0));
+            visitBlock(ctx.stmt(0), null);
             LLVMBuildBr(builder, entry);
             // else block
             LLVMPositionBuilderAtEnd(builder, ifFalse);
             if (ctx.ELSE() != null) {
-                buildBlock(ctx.stmt(1));
+                visitBlock(ctx.stmt(1), null);
             }
             LLVMBuildBr(builder, entry);
 
@@ -158,9 +158,16 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
             Symbol condSymbol = visit(ctx.cond());
             LLVMBuildCondBr(builder, condSymbol.getValue(), body, entry);
             LLVMPositionBuilderAtEnd(builder, body);
-            buildBlock(ctx.stmt(0));
+            visitBlock(ctx.stmt(0), entry);
             LLVMBuildBr(builder, conditon);
             LLVMPositionBuilderAtEnd(builder, entry);
+            return null;
+        }
+        if (ctx.BREAK() != null) {
+            assert curScope instanceof LocalScope : "must break from local scope";
+            LocalScope localScope = getLocalScopeWithExit();
+            LLVMBasicBlockRef exitBlock = localScope.getLLVMExitBlock();
+            LLVMBuildBr(builder, exitBlock);
             return null;
         }
         return visitChildren(ctx);
@@ -175,11 +182,24 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         return (FunctionSymbol) scope;
     }
 
-    void buildBlock(SysYParser.StmtContext stmt) {
-        if (stmt.block() != null) {
-            for (int i = 0; i < stmt.block().blockItem().size(); i++)
-                visit(stmt.block().blockItem(i));
+    LocalScope getLocalScopeWithExit() {
+        Scope scope = curScope;
+        while (scope instanceof LocalScope) {
+            LocalScope localScope = (LocalScope) scope;
+            if (localScope.getLLVMExitBlock() != null)
+                return localScope;
+            scope = scope.getEncloseingScope();
         }
+        assert false : "cannot get localscope with exit";
+        return null;
+    }
+
+    void visitBlock(SysYParser.StmtContext stmt, LLVMBasicBlockRef exitBlock) {
+        LocalScope localScope = new LocalScope(curScope);
+        localScope.setLLVMExitBlock(exitBlock);
+        curScope = localScope;
+        visit(stmt);
+        curScope = curScope.getEncloseingScope();
     }
 
     @Override
