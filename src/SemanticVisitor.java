@@ -162,37 +162,41 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
         // assert ret != null : "No exp matched";
         return ret;
     }
-    Type getTypeWithSymbol(Symbol symbol)
-    {
-        if(symbol instanceof FunctionSymbol) {
-           return ((FunctionSymbol)symbol).getRetType();
+
+    Type getTypeWithSymbol(Symbol symbol) {
+        if (symbol instanceof FunctionSymbol) {
+            return ((FunctionSymbol) symbol).getRetType();
         }
         return symbol.getType();
     }
+
     boolean isSymbolTypeMatched(Symbol lSymbol, Symbol rSymbol) {
-        if(lSymbol instanceof BasicTypeSymbol) {
-            return isSymbolOfBasicType(rSymbol, (BasicTypeSymbol)lSymbol);
+        if (lSymbol instanceof BasicTypeSymbol) {
+            return isSymbolOfBasicType(rSymbol, (BasicTypeSymbol) lSymbol);
         }
-        if(rSymbol instanceof BasicTypeSymbol) {
-            return isSymbolOfBasicType(lSymbol, (BasicTypeSymbol)rSymbol);
+        if (rSymbol instanceof BasicTypeSymbol) {
+            return isSymbolOfBasicType(lSymbol, (BasicTypeSymbol) rSymbol);
         }
         Type lType = getTypeWithSymbol(lSymbol);
         Type rType = getTypeWithSymbol(rSymbol);
         return isTypeMatched(lType, rType);
     }
+
     boolean isSymbolOfBasicType(Symbol symbol, BasicTypeSymbol basicTypeSymbol) {
-        if(symbol instanceof BasicTypeSymbol) {
-            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol)symbol);
+        if (symbol instanceof BasicTypeSymbol) {
+            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol) symbol);
         }
         Type type = symbol.getType();
-        if(type instanceof BasicTypeSymbol) {
-            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol)type);
+        if (type instanceof BasicTypeSymbol) {
+            return isBasicTypeSymbolMatched(basicTypeSymbol, (BasicTypeSymbol) type);
         }
         return false;
     }
+
     boolean isBasicTypeSymbolMatched(BasicTypeSymbol lSymbol, BasicTypeSymbol rSymbol) {
         return lSymbol.name.equals(rSymbol.name);
     }
+
     boolean isTypeMatched(Type lType, Type rType) {
         if (lType == null || rType == null) {
             return false;
@@ -203,7 +207,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
     Symbol HandleBinaryOP(SysYParser.ExpContext ctx, Token symbol) {
         Symbol lType = visit(ctx.exp(0));
         Symbol rType = visit(ctx.exp(1));
-        if (!isTypeMatched(lType.getType(), rType.getType())) {
+        if (!isSymbolTypeMatched(lType, rType)) {
             OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_OPERANDS, symbol.getLine(),
                     ctx.exp(0).getText() + " = " + ctx.exp(1).getText());
             return null;
@@ -332,7 +336,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
                 Symbol paramType = visit(ctx.funcFParams().funcFParam(i));
                 assert paramType instanceof BasicTypeSymbol : "array not support";
                 if (paramType instanceof BasicTypeSymbol) {
-                    funcType.addParamSymbol(new BasicSymbol(id, (Type)paramType));
+                    funcType.addParamSymbol(new BasicSymbol(id, (Type) paramType));
                 }
             }
         }
