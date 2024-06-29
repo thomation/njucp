@@ -65,7 +65,7 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
         String funcName = ctx.IDENT().getText();
         String typeString = ctx.funcType().getText();
         Symbol retType = curScope.find(typeString);
-        FunctionSymbol funcType = new FunctionSymbol(funcName, (Type) retType, curScope);
+        FunctionSymbol funcType = new FunctionSymbol(funcName, retType, curScope);
         curScope.put(funcType);
         int paramCount = ctx.funcFParams() != null ? ctx.funcFParams().funcFParam().size() : 0;
         PointerPointer<Pointer> argumentTypes = new PointerPointer<>(paramCount);

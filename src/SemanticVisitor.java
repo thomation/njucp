@@ -165,7 +165,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
 
     Type getTypeWithSymbol(Symbol symbol) {
         if (symbol instanceof FunctionSymbol) {
-            return ((FunctionSymbol) symbol).getRetType();
+            return ((FunctionSymbol) symbol).getRetType().getType();
         }
         return symbol.getType();
     }
@@ -239,15 +239,15 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
     public Symbol visitStmt(SysYParser.StmtContext ctx) {
         if (ctx.RETURN() != null) {
             if (ctx.exp() != null) {
-                Symbol retType = visit(ctx.exp());
+                Symbol valueType = visit(ctx.exp());
                 FunctionSymbol funcType = findEncloseFuncType();
-                // System.out.printf("func:%s, ret:%s\n", funcType, retType);
-                if (funcType == null || retType == null || !isSymbolTypeMatched(funcType, retType)) {
+                System.out.printf("func:%s, ret:%s\n", funcType, valueType);
+                if (funcType == null || valueType == null || !isSymbolTypeMatched(funcType.getRetType(), valueType)) {
                     OutputHelper.getInstance().addSemanticError(SemanticErrorType.MISMATCH_RETURN,
                             ctx.RETURN().getSymbol().getLine(),
-                            funcType.getRetType() + " != " + retType.getType());
+                            funcType.getRetType() + " != " + valueType.getType());
                 }
-                return retType;
+                return valueType;
             }
             visit(ctx.SEMICOLON());
             return null;
@@ -327,8 +327,7 @@ public class SemanticVisitor extends SysYParserBaseVisitor<Symbol> {
                     funcName);
             return null;
         }
-        Type retType = (Type) retSymbol;
-        FunctionSymbol funcType = new FunctionSymbol(funcName, retType, curScope);
+        FunctionSymbol funcType = new FunctionSymbol(funcName, retSymbol, curScope);
         curScope.put(funcType);
         if (ctx.funcFParams() != null) {
             for (int i = 0; i < ctx.funcFParams().funcFParam().size(); i++) {

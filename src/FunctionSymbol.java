@@ -4,17 +4,17 @@ import org.bytedeco.llvm.LLVM.LLVMTypeRef;
 import org.bytedeco.llvm.LLVM.LLVMValueRef;
 
 public class FunctionSymbol extends BaseScope implements Type, Symbol {
-    Type retType;
+    Symbol retType;
     ArrayList<Symbol> paramsSymbol;
     LLVMValueRef value;
     LLVMTypeRef type;
 
-    public FunctionSymbol(String funcName, Type retType, Scope enclosingScope) {
+    public FunctionSymbol(String funcName, Symbol retType, Scope enclosingScope) {
         super(funcName, enclosingScope);
         this.retType = retType;
     }
 
-    public Type getRetType() {
+    public Symbol getRetType() {
         return retType;
     }
 
