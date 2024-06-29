@@ -23,6 +23,9 @@ public class LLVMVisitor extends SysYParserBaseVisitor<Symbol> {
 
     }
 
+    public LLVMModuleRef getModule() {
+        return module;
+    }
     @Override
     public Symbol visitProgram(SysYParser.ProgramContext ctx) {
         globalScope = new GlobalScope(null);
