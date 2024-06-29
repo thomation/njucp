@@ -50,6 +50,8 @@ public class AsmBuilder {
                     System.out.printf("opcode:%d, operandNum:%d string:%s\n", opcode, operandNum, instString);
                     switch (opcode) {
                         case LLVM.LLVMRet:
+                            String op1 = LLVMPrintValueToString(LLVMGetOperand(inst, 0)).getString();
+                            System.out.printf("op: %s\n", op1);
                             ret(instString);
                             break;
 
