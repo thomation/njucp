@@ -1,4 +1,3 @@
-import static org.bytedeco.llvm.global.LLVM.LLVMConstIntGetSExtValue;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetFirstBasicBlock;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetFirstFunction;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetFirstGlobal;
@@ -10,12 +9,10 @@ import static org.bytedeco.llvm.global.LLVM.LLVMGetNextGlobal;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetNextInstruction;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetNumOperands;
 import static org.bytedeco.llvm.global.LLVM.LLVMGetOperand;
-import static org.bytedeco.llvm.global.LLVM.LLVMGetValueName;
 import static org.bytedeco.llvm.global.LLVM.LLVMPrintValueToString;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-import java.nio.ByteBuffer;
 
 import org.bytedeco.llvm.LLVM.LLVMBasicBlockRef;
 import org.bytedeco.llvm.LLVM.LLVMModuleRef;
@@ -34,25 +31,22 @@ public class AsmBuilder {
     }
 
     public void build() {
-        System.out.printf("build %s\n", module);
+        buffer.append(".text\n");
         for (LLVMValueRef value = LLVMGetFirstGlobal(module); value != null; value = LLVMGetNextGlobal(value)) {
             System.out.println(value);
         }
         for (LLVMValueRef func = LLVMGetFirstFunction(module); func != null; func = LLVMGetNextFunction(func)) {
-            System.out.println(func);
+            buffer.append(".global main\n");
+            buffer.append("main:\n");
+            buffer.append("addi sp, sp, 0\n");
             for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(func); bb != null; bb = LLVMGetNextBasicBlock(bb)) {
-                System.out.println(bb);
                 for (LLVMValueRef inst = LLVMGetFirstInstruction(bb); inst != null; inst = LLVMGetNextInstruction(
                         inst)) {
                     int opcode = LLVMGetInstructionOpcode(inst);
-                    int operandNum = LLVMGetNumOperands(inst);
-                    String instString = LLVMPrintValueToString(inst).getString();
-                    System.out.printf("opcode:%d, operandNum:%d string:%s\n", opcode, operandNum, instString);
                     switch (opcode) {
                         case LLVM.LLVMRet:
                             String op1 = LLVMPrintValueToString(LLVMGetOperand(inst, 0)).getString();
-                            System.out.printf("op: %s\n", op1);
-                            ret(instString);
+                            ret(op1);
                             break;
 
                         default:
@@ -62,15 +56,6 @@ public class AsmBuilder {
             }
 
         }
-        buffer.append(".text\r\n" + //
-                "  .globl main\r\n" + //
-                "main:\r\n" + //
-                "  addi sp, sp, 0\r\n" + //
-                "mainEntry:\r\n" + //
-                "  li a0, 0\r\n" + //
-                "  addi sp, sp, 0\r\n" + //
-                "  li a7, 93\r\n" + //
-                "  ecall");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
             writer.write(buffer.toString());
         } catch (Exception e) {
@@ -78,8 +63,12 @@ public class AsmBuilder {
         }
     }
 
-    public void ret(String inst) {
-
+    public void ret(String op) {
+        String[] ops = op.split(" ");
+        buffer.append("li a0 " + ops[1] + "\n");
+        buffer.append("addi sp, sp, 0\n");
+        buffer.append("li a7, 93\n");
+        buffer.append("ecall\n");
     }
 
     public void op2(String op, String dest, String lhs, String rhs) {
