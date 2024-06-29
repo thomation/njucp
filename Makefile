@@ -1,6 +1,7 @@
 LLVM_JAR = $(shell echo `find /usr/local/lib -name "llvm-*.jar"` | sed  "s/\s\+/:/g")
 JAVACPP_JAR = $(shell echo `find /usr/local/lib -name "javacpp-*.jar"` | sed  "s/\s\+/:/g")
 ANTLR_PATH = $(shell find /usr/local/lib -name "antlr-*-complete.jar")
+RARS_JAR = $(shell echo `find /usr/local/lib -name "rars1_6.jar"` | sed  "s/\s\+/:/g")
 
 export CLASSPATH=$(ANTLR_PATH):$(LLVM_JAR):$(JAVACPP_JAR)
 
@@ -20,8 +21,11 @@ compile: antlr
 	$(JAVAC) -classpath $(CLASSPATH) $(JAVAFILE) -d classes
 
 run: compile
-	java -ea -classpath ./classes:$(CLASSPATH) Main $(FILEPATH) $(OUTPUT)
+	java -ea -classpath ./classes:$(CLASSPATH) Main $(FILEPATH)
 
+asm: compile
+	java -ea -classpath ./classes:$(CLASSPATH) Main $(FILEPATH) $(OUTPUT)
+	java -jar $(RARS_JAR) $(OUTPUT)
 antlr: $(LFILE) $(PFILE) 
 	$(ANTLR) $(PFILE) $(LFILE)
 

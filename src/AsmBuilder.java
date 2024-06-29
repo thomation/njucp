@@ -15,7 +15,15 @@ public class AsmBuilder {
     }
 
     public void build() {
-        buffer.append("Test asm");
+        buffer.append(".text\r\n" + //
+                        "  .globl main\r\n" + //
+                        "main:\r\n" + //
+                        "  addi sp, sp, 0\r\n" + //
+                        "mainEntry:\r\n" + //
+                        "  li a0, 0\r\n" + //
+                        "  addi sp, sp, 0\r\n" + //
+                        "  li a7, 93\r\n" + //
+                        "  ecall");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
             writer.write(buffer.toString());
         } catch (Exception e) {
