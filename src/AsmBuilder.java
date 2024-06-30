@@ -31,29 +31,32 @@ public class AsmBuilder {
     }
 
     public void build() {
-        buffer.append(".text\n");
         for (LLVMValueRef value = LLVMGetFirstGlobal(module); value != null; value = LLVMGetNextGlobal(value)) {
-            System.out.println(value);
+            String data = LLVMPrintValueToString(value).getString();
+            gVar(data);
         }
         for (LLVMValueRef func = LLVMGetFirstFunction(module); func != null; func = LLVMGetNextFunction(func)) {
-            buffer.append(".global main\n");
-            buffer.append("main:\n");
-            buffer.append("addi sp, sp, 0\n");
+            int offset = 64;
+            gFuncEnter(offset);
+            int cur = offset;
             for (LLVMBasicBlockRef bb = LLVMGetFirstBasicBlock(func); bb != null; bb = LLVMGetNextBasicBlock(bb)) {
                 for (LLVMValueRef inst = LLVMGetFirstInstruction(bb); inst != null; inst = LLVMGetNextInstruction(
                         inst)) {
                     int opcode = LLVMGetInstructionOpcode(inst);
+                    String instString = LLVMPrintValueToString(inst).getString();
+                    System.out.printf("op:%d, inst:%s\n", opcode, instString);
                     switch (opcode) {
                         case LLVM.LLVMRet:
                             String op1 = LLVMPrintValueToString(LLVMGetOperand(inst, 0)).getString();
+                            System.out.println(op1);
                             ret(op1);
                             break;
-
                         default:
                             break;
                     }
                 }
             }
+            gFuncExit(offset);
 
         }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputPath))) {
@@ -63,12 +66,30 @@ public class AsmBuilder {
         }
     }
 
-    public void ret(String op) {
-        String[] ops = op.split(" ");
-        buffer.append("li a0 " + ops[1] + "\n");
-        buffer.append("addi sp, sp, 0\n");
+    void gFuncEnter(int offset) {
+        buffer.append(".text\n");
+        buffer.append(".global main\n");
+        buffer.append("main:\n");
+        buffer.append("addi sp, sp, -" + offset +"\n");
+    }
+    void gFuncExit(int offset) {
+        buffer.append("addi sp, sp, " + offset + "\n");
         buffer.append("li a7, 93\n");
         buffer.append("ecall\n");
+    }
+
+    void gVar(String var) {
+        buffer.append(".data\n");
+        String[] vars = var.split(" ");
+        String varName = vars[0].substring(1);
+        String index = vars[4];
+        buffer.append(varName + "\n");
+        buffer.append("word " + index + "\n");
+    }
+
+    void ret(String op) {
+        String[] ops = op.split(" ");
+        buffer.append("li a0 " + ops[1] + "\n");
     }
 
     public void op2(String op, String dest, String lhs, String rhs) {
